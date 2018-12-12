@@ -5,7 +5,6 @@ export INSTALLDIR?=$(PWD)/../usr
 SRCDEPS=fftw-3.3.8 \
 glpk-4.65 \
 pcre2-10.31 \
-readline-8.0-alpha \
 bison-3.0.4 \
 curl-7.60.0 \
 gawk-4.2.1 \
@@ -17,14 +16,17 @@ qrupdate-1.1.2 \
 icoutils-0.32.3 \
 OpenBLAS-0.2.20
 
+# readline-8.0-beta2 \
+
 #install-%: %.tar.gz
 #	tar -xzf $<
 #	cd $* && ./configure --prefix=$(INSTALLDIR)
 #	cd $* && make && make install
 
 #install-%: %.tar.xz
-#	tar -xvJf $<
-#	cd $* && ./confgure --prefix=$(INSTALLDIR)
+#	xz -d $<
+#	tar -xvJf $(patsubst %.tar.xz,%.tar,$<)
+#	cd $* && ./configure --prefix=$(INSTALLDIR)
 #	cd $* && make && make install
 
 OpenBLAS-0.2.20.tar.gz:
@@ -58,7 +60,7 @@ pcre2-10.31.tar.gz:
 install-pcre2-10.31: pcre2-10.31.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libpcre2-8.a" ]] ; then \
 	tar -xzf $< ; \
-	cd pcre2-10.31 && ./configure --prefix=$(INSTALLDIR) ; \
+	cd pcre2-10.31 && ./configure --disable-dependency-tracking --prefix=$(INSTALLDIR) ; \
 	make && make install ; \
 	fi
 
@@ -68,8 +70,9 @@ bison-3.0.4.tar.xz:
 
 install-bison-3.0.4: bison-3.0.4.tar.xz
 	if [[ ! -f "$(INSTALLDIR)/bin/bison" ]] ; then \
-	tar -xvJf $< ; \
-	cd bison-3.0.4 && ./configure --prefix=$(INSTALLDIR) ; \
+	xz -d $< ; \
+	tar -xf $(patsubst %.tar.xz,%.tar,$<) ; \
+	cd bison-3.0.4 && ./configure --disable-dependency-tracking --prefix=$(INSTALLDIR) ; \
 	make && make install ; \
 	fi
 
@@ -79,8 +82,9 @@ sed-4.5.tar.xz:
 
 install-sed-4.5: sed-4.5.tar.xz
 	if [[ ! -f "$(INSTALLDIR)/bin/sed" ]] ; then \
-	tar -xvJf $< ; \
-	cd sed-4.5 && ./configure --prefix=$(INSTALLDIR) --with-included-regex --with-included-gettext ; \
+	xz -d $< ; \
+	tar -xf $(patsubst %.tar.xz,%.tar,$<) ; \
+	cd sed-4.5 && ./configure --prefix=$(INSTALLDIR) --with-included-regex --with-included-gettext --disable-dependency-tracking ; \
 	make && make install ; \
 	fi
 
@@ -90,19 +94,20 @@ gawk-4.2.1.tar.xz:
 
 install-gawk-4.2.1: gawk-4.2.1.tar.xz
 	if [[ ! -f "$(INSTALLDIR)/bin/gawk" ]] ; then \
-	tar -xvJf $< ; \
-	cd gawk-4.2.1 && ./configure --prefix=$(INSTALLDIR) --disable-nls ; \
+	xz -d $< ; \
+	tar -xf $(patsubst %.tar.xz,%.tar,$<) ; \
+	cd gawk-4.2.1 && ./configure --prefix=$(INSTALLDIR) --disable-nls --disable-dependency-tracking ; \
 	make && make install ; \
 	fi
 
 ## Readline
-readline-8.0-alpha.tar.gz:
-	curl -o $@ https://ftp.gnu.org/gnu/readline/readline-8.0-alpha.tar.gz
+readline-8.0-beta2.tar.gz:
+	curl -o $@ https://ftp.gnu.org/gnu/readline/readline-8.0-beta2.tar.gz
 
-install-readline-8.0-alpha: readline-8.0-alpha.tar.gz
+install-readline-8.0-beta2: readline-8.0-beta2.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libreadline.a" ]] ; then \
 	tar -xzf $< ; \
-	cd readline-8.0-alpha && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
+	cd readline-8.0-beta2 && ./configure --prefix=$(INSTALLDIR) --enable-shared --disable-dependency-tracking ; \
 	make && make install ; \
 	fi
 
@@ -114,7 +119,7 @@ install-fftw-3.3.8: fftw-3.3.8.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libfftw3.a" ]] ; then \
 	tar -xzf $< ; \
 	cd fftw-3.3.8 && ./configure --prefix=$(INSTALLDIR) --enable-shared && \
-	make && make check && make install && \
+	make && make install && \
 	./configure --prefix=$(INSTALLDIR) --enable-shared --enable-float --enable-sse && \
 	make install ; \
 	fi
@@ -125,9 +130,10 @@ curl-7.60.0.tar.xz:
 
 install-curl-7.60.0: curl-7.60.0.tar.xz
 	if [[ ! -f "$(INSTALLDIR)/lib/libcurl.a" ]] ; then \
-	tar -xvJf $< ; \
-	cd curl-7.60.0 && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
-	make && make check && make install ; \
+	xz -d $< ; \
+	tar -xf $(patsubst %.tar.xz,%.tar,$<) ; \
+	cd curl-7.60.0 && ./configure --prefix=$(INSTALLDIR) --enable-shared --disable-dependency-tracking ; \
+	make && make install ; \
 	fi
 
 ## GLPK
@@ -137,8 +143,8 @@ glpk-4.65.tar.gz:
 install-glpk-4.65: glpk-4.65.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libglpk.a" ]] ; then \
 	tar -xzf $< ; \
-	cd glpk-4.65 && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
-	make && make check && make install ; \
+	cd glpk-4.65 && ./configure --prefix=$(INSTALLDIR) --enable-shared --disable-dependency-tracking ; \
+	make && make install ; \
 	fi
 
 ## SuiteSparse
@@ -147,7 +153,7 @@ SuiteSparse-5.3.0.tar.gz:
 
 install-SuiteSparse-5.3.0: SuiteSparse-5.3.0.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libgraphblas.a" ]] ; then \
-	tar xvzf $< ; \
+	tar xzf $< ; \
 	cd SuiteSparse && make && make cx && make install INSTALL=$(INSTALLDIR) ; \
 	fi
 
@@ -157,7 +163,7 @@ qhull-v7.2.0.tar.gz:
 
 install-qhull-7.2.0: qhull-v7.2.0.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/bin/qhull" ]] ; then \
-	tar xvzf $< ; \
+	tar xzf $< ; \
 	cd qhull-7.2.0 && \
 	mkdir -p build && cd build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) -DCMAKE_BUILD_TYPE=Release .. && \
@@ -171,7 +177,7 @@ gl2ps-1.4.0.tgz:
 
 install-gl2ps-1.4.0: gl2ps-1.4.0.tgz
 	if [[ ! -f "$(INSTALLDIR)/lib/libgl2ps.a" ]] ; then \
-	tar xvzf $< ; \
+	tar xzf $< ; \
 	cd gl2ps-1.4.0-source ; \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) . ; \
 	make ; \
@@ -185,7 +191,7 @@ qrupdate-1.1.2.tar.gz:
 
 install-qrupdate-1.1.2: qrupdate-1.1.2.tar.gz
 	if [[ ! -f "$(INSTALLDIR)/lib/libqrupdate.dylib" ]] ; then \
-	tar xvzf $< ; \
+	tar xzf $< ; \
 	cd qrupdate-1.1.2 ; \
 	patch -p0 < ../../../qrupdate-1.1.2_Makeconf.patch ; \
 	make solib ; \
