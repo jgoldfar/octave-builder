@@ -1,0 +1,198 @@
+SHELL=/bin/bash
+PWD=$(shell pwd)
+export INSTALLDIR?=$(PWD)/../usr
+
+SRCDEPS=fftw-3.3.8 \
+glpk-4.65 \
+pcre2-10.31 \
+readline-8.0-alpha \
+bison-3.0.4 \
+curl-7.60.0 \
+gawk-4.2.1 \
+sed-4.5 \
+SuiteSparse-5.3.0 \
+qhull-7.2.0 \
+gl2ps-1.4.0 \
+qrupdate-1.1.2 \
+icoutils-0.32.3 \
+OpenBLAS-0.2.20
+
+#install-%: %.tar.gz
+#	tar -xzf $<
+#	cd $* && ./configure --prefix=$(INSTALLDIR)
+#	cd $* && make && make install
+
+#install-%: %.tar.xz
+#	tar -xvJf $<
+#	cd $* && ./confgure --prefix=$(INSTALLDIR)
+#	cd $* && make && make install
+
+OpenBLAS-0.2.20.tar.gz:
+	curl -o $@ http://github.com/xianyi/OpenBLAS/archive/v0.2.20.tar.gz
+
+install-OpenBLAS-0.2.20: OpenBLAS-0.2.20.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/include/openblas_config.h" ]] ; then \
+	tar -xzf $< ; \
+	cd OpenBLAS-0.2.20 && \
+	make USE_THREAD=0 CPPFLAGS="-I$(INSTALLDIR)/usr/include" CFLAGS="-O2 -march=native" CXXFLAGS="-O2 -march=native" FFLAGS="-O2 -march=native" LDFLAGS="-L$(INSTALLDIR)/usr/lib64 -Wl,-rpath,$(INSTALLDIR)/usr/lib64" && \
+	make PREFIX=$(INSTALLDIR) install ; \
+	fi
+
+## icotools
+icoutils-0.32.3.tar.bz2:
+	curl -o $@ http://savannah.nongnu.org/download/icoutils/icoutils-0.32.3.tar.bz2
+
+install-icoutils-0.32.3: icoutils-0.32.3.tar.bz2
+	if [[ ! -f "$(INSTALLDIR)/bin/icotool" ]] ; then \
+	tar -xvjf $< ; \
+	cd icoutils-0.32.3 && \
+	./configure --prefix=$(INSTALLDIR) && \
+	make && \
+	make install ; \
+	fi
+
+## PCRE
+pcre2-10.31.tar.gz:
+	curl -o $@ https://ftp.pcre.org/pub/pcre/pcre2-10.31.tar.gz
+
+install-pcre2-10.31: pcre2-10.31.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libpcre2-8.a" ]] ; then \
+	tar -xzf $< ; \
+	cd pcre2-10.31 && ./configure --prefix=$(INSTALLDIR) ; \
+	make && make install ; \
+	fi
+
+## Bison
+bison-3.0.4.tar.xz:
+	curl -o $@ http://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
+
+install-bison-3.0.4: bison-3.0.4.tar.xz
+	if [[ ! -f "$(INSTALLDIR)/bin/bison" ]] ; then \
+	tar -xvJf $< ; \
+	cd bison-3.0.4 && ./configure --prefix=$(INSTALLDIR) ; \
+	make && make install ; \
+	fi
+
+## Sed
+sed-4.5.tar.xz:
+	curl -o $@ http://ftp.gnu.org/gnu/sed/sed-4.5.tar.xz
+
+install-sed-4.5: sed-4.5.tar.xz
+	if [[ ! -f "$(INSTALLDIR)/bin/sed" ]] ; then \
+	tar -xvJf $< ; \
+	cd sed-4.5 && ./configure --prefix=$(INSTALLDIR) --with-included-regex --with-included-gettext ; \
+	make && make install ; \
+	fi
+
+## Awk
+gawk-4.2.1.tar.xz:
+	curl -o $@ http://ftp.gnu.org/gnu/gawk/gawk-4.2.1.tar.xz
+
+install-gawk-4.2.1: gawk-4.2.1.tar.xz
+	if [[ ! -f "$(INSTALLDIR)/bin/gawk" ]] ; then \
+	tar -xvJf $< ; \
+	cd gawk-4.2.1 && ./configure --prefix=$(INSTALLDIR) --disable-nls ; \
+	make && make install ; \
+	fi
+
+## Readline
+readline-8.0-alpha.tar.gz:
+	curl -o $@ https://ftp.gnu.org/gnu/readline/readline-8.0-alpha.tar.gz
+
+install-readline-8.0-alpha: readline-8.0-alpha.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libreadline.a" ]] ; then \
+	tar -xzf $< ; \
+	cd readline-8.0-alpha && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
+	make && make install ; \
+	fi
+
+## FFTW
+fftw-3.3.8.tar.gz:
+	curl -o $@ http://www.fftw.org/fftw-3.3.8.tar.gz
+
+install-fftw-3.3.8: fftw-3.3.8.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libfftw3.a" ]] ; then \
+	tar -xzf $< ; \
+	cd fftw-3.3.8 && ./configure --prefix=$(INSTALLDIR) --enable-shared && \
+	make && make check && make install && \
+	./configure --prefix=$(INSTALLDIR) --enable-shared --enable-float --enable-sse && \
+	make install ; \
+	fi
+
+## Curl (known-working version)
+curl-7.60.0.tar.xz:
+	curl -o $@ https://github.com/curl/curl/releases/download/curl-7_60_0/curl-7.60.0.tar.xz
+
+install-curl-7.60.0: curl-7.60.0.tar.xz
+	if [[ ! -f "$(INSTALLDIR)/lib/libcurl.a" ]] ; then \
+	tar -xvJf $< ; \
+	cd curl-7.60.0 && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
+	make && make check && make install ; \
+	fi
+
+## GLPK
+glpk-4.65.tar.gz:
+	curl -o $@ https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
+
+install-glpk-4.65: glpk-4.65.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libglpk.a" ]] ; then \
+	tar -xzf $< ; \
+	cd glpk-4.65 && ./configure --prefix=$(INSTALLDIR) --enable-shared ; \
+	make && make check && make install ; \
+	fi
+
+## SuiteSparse
+SuiteSparse-5.3.0.tar.gz:
+	curl -o $@ http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz
+
+install-SuiteSparse-5.3.0: SuiteSparse-5.3.0.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libgraphblas.a" ]] ; then \
+	tar xvzf $< ; \
+	cd SuiteSparse && make && make cx && make install INSTALL=$(INSTALLDIR) ; \
+	fi
+
+## QHull
+qhull-v7.2.0.tar.gz:
+	curl -o $@ https://github.com/qhull/qhull/archive/v7.2.0.tar.gz
+
+install-qhull-7.2.0: qhull-v7.2.0.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/bin/qhull" ]] ; then \
+	tar xvzf $< ; \
+	cd qhull-7.2.0 && \
+	mkdir -p build && cd build && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) -DCMAKE_BUILD_TYPE=Release .. && \
+	make && \
+	make install ; \
+	fi
+
+## GL2PS
+gl2ps-1.4.0.tgz:
+	curl -o $@ http://geuz.org/gl2ps/src/gl2ps-1.4.0.tgz
+
+install-gl2ps-1.4.0: gl2ps-1.4.0.tgz
+	if [[ ! -f "$(INSTALLDIR)/lib/libgl2ps.a" ]] ; then \
+	tar xvzf $< ; \
+	cd gl2ps-1.4.0-source ; \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) . ; \
+	make ; \
+	make install ; \
+	fi
+
+## QRUpdate
+# Note: make install doesn't work, even with PREFIX set.
+qrupdate-1.1.2.tar.gz:
+	curl -o $@ -L https://downloads.sourceforge.net/project/qrupdate/qrupdate/1.2/qrupdate-1.1.2.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fqrupdate%2Ffiles%2Flatest%2Fdownload&ts=1544583551
+
+install-qrupdate-1.1.2: qrupdate-1.1.2.tar.gz
+	if [[ ! -f "$(INSTALLDIR)/lib/libqrupdate.dylib" ]] ; then \
+	tar xvzf $< ; \
+	cd qrupdate-1.1.2 ; \
+	patch -p0 < ../../../qrupdate-1.1.2_Makeconf.patch ; \
+	make solib ; \
+	cp libqrupdate.dylib $(INSTALLDIR)/lib/ ; \
+	fi
+
+install: $(addprefix install-,$(SRCDEPS))
+
+clean-deps:
+	$(foreach d,$(depsDirs),$(RM) -r $d)

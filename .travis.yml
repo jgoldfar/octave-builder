@@ -1,0 +1,43 @@
+language: generic
+
+sudo: false
+
+matrix:
+  include:
+#    - os: linux
+#      env: ARCH="x86_64"
+#      addons:
+#        apt:
+#          packages:
+#            - mercurial
+    - os: osx
+      env: ARCH="x86_64"
+      osx_image: xcode9.4 # OSX 10.13 (https://docs.travis-ci.com/user/installing-dependencies/#installing-packages-on-os-x)
+      addons:
+        homebrew:
+          packages:
+            - mercurial
+            - autoconf
+            - automake
+            - gnuplot
+            - gcc
+            - hdf5
+            - qt
+            - curl
+
+before_script:
+    - curl -o octave-4.4.1.tar.gz https://ftp.gnu.org/gnu/octave/octave-4.4.1.tar.xz
+    - tar xvzf octave-4.4.1.tar.gz
+    - mkdir -p octave-4.4.1/deps
+    - cp octave-deps-Makefile octave-4.4.1/deps/Makefile
+    - cp qrupdate-1.1.2_Makeconf.patch octave-4.4.1/deps/deps
+    - cd octave-4.4.1/deps && make -j4 install
+
+script:
+    # compile Octave
+    - echo "Ready to try to compile"
+    # - travis_wait 10 make > build.log
+    # run tests
+    #- make check || echo "Tests failed."
+    # Install (in particular, build docs)
+    #- make install
