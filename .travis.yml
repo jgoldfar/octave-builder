@@ -19,28 +19,37 @@ matrix:
             - mercurial
             - autoconf
             - automake
+            - texinfo
             - gnuplot
-            - gcc
             - hdf5
             - qt
             - curl
             - xz
+            - icoutils
+            - glpk
+            - bison
+            - pcre2
+            - qrupdate
+            - qhull
+            - readline
+            - fftw
+            - gl2ps
+            - suite-sparse
+            - openblas
+            - gawk
 
 before_script:
-    - curl -o octave-4.4.1.tar.gz https://ftp.gnu.org/gnu/octave/octave-4.4.1.tar.xz
-    - tar xzf octave-4.4.1.tar.gz
-    - mkdir -p octave-4.4.1/deps
-    - cp octave-deps-Makefile octave-4.4.1/deps/Makefile
-    - cp qrupdate-1.1.2_Makeconf.patch octave-4.4.1/deps/deps
-    - cd octave-4.4.1/deps && make install
+    - curl -o ${TRAVIS_BUILD_DIR}/octave-4.4.1.tar.gz https://ftp.gnu.org/gnu/octave/octave-4.4.1.tar.xz
+    - tar -xzf ${TRAVIS_BUILD_DIR}/octave-4.4.1.tar.gz --directory ${TRAVIS_BUILD_DIR}
+    - brew install gnu-sed --with-default-names
 
 script:
-    # compile Octave
-    - echo "Ready to try to compile"
-    - cd octave-4.4.1
-    - ./configure --help
-    # - travis_wait 10 make > build.log
+    # Configure Octave
+    - cd ${TRAVIS_BUILD_DIR}/octave-4.4.1
+    - export PATH=${TRAVIS_BUILD_DIR}/octave-4.4.1/usr/bin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:${PATH}
+    - export BREWPFX=`brew --prefix`
+    - ./configure --prefix=`pwd`/usr --with-qhull-includedir=${BREWPFX}/include --with-qhull-libdir=${BREWPFX}/lib --with-pcre-includedir=${BREWPFX}/include --with-pcre-libdir=${BREWPFX}/lib --with-fftw3-includedir=${BREWPFX}/include --with-fftw3-libdir=${BREWPFX}/lib --with-fftw3f-includedir=${BREWPFX}/include --with-fftw3f-libdir=${BREWPFX}/lib --with-glpk-includedir=${BREWPFX}/include --with-glpk-libdir=${BREWPFX}/lib --with-curl-includedir=${BREWPFX}/include --with-curl-libdir=${BREWPFX}/lib --with-qrupdate-includedir=${BREWPFX}/include --with-qrupdate-libdir=${BREWPFX}/lib LDFLAGS="-L/usr/local/lib -L/usr/local/opt/readline/lib -L/usr/local/opt/bison/lib -L/usr/local/opt/texinfo/lib" CPPFLAGS="-I/usr/local/include -I/usr/local/opt/readline/include -I/usr/local/opt/texinfo/include" QT_CFLAGS="-I/usr/local/opt/qt/include" QT_LIBS="-L/usr/local/opt/qt/lib"
+    # Compile Octave
+    - make -j3
     # run tests
-    #- make check || echo "Tests failed."
-    # Install (in particular, build docs)
-    #- make install
+    # - make check || echo "Tests failed."
