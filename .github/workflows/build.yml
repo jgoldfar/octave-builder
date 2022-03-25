@@ -82,24 +82,43 @@ jobs:
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
         run: |
           export BREWPFX=`brew --prefix`
-          export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/qt/include"
-          export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
-          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-          env
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
           autoreconf -i -f
-          ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas" || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
+          ./configure --prefix=$GITHUB_WORKSPACE/usr \
+            --disable-dependency-tracking \
+            --disable-silent-rules \
+            --enable-link-all-dependencies \
+            --enable-shared \
+            --disable-static \
+            --with-x=no \
+            --with-portaudio \
+            --with-sndfile \
+            --with-hdf5-includedir=$BREWPFX/include \
+            --with-hdf5-libdir=$BREWPFX/lib \
+            --with-java-homedir=$BREWPFX/opt/openjdk \
+            --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
+            CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/lib" \
+            LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
+            PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
+            QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
+            F77=$BREWPFX/bin/gfortran-11 \
+            FC=$BREWPFX/bin/gfortran-11 \
+            QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
+            || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
         env:
           QCOLLECTIONGENERATOR: qhelpgenerator
-          QT_CPPFLAGS: -I/usr/local/opt/qt/include
-          QT_LDFLAGS: -L/usr/local/opt/qt/lib
-          F77: /usr/local/bin/gfortran-11
-          FC: /usr/local/bin/gfortran-11
-          # CC: /usr/local/bin/gcc
 
-      - name: Build Octave
-        run: |
-          make -j2 || echo "::warning title=BuildFailure::Build Failed"
+      # - name: Build Octave
+      #   run: |
+      #     export BREWPFX=`brew --prefix`
+      #     export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/lib"
+      #     export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
+      #     export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+      #     export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
+      #     export F77=$BREWPFX/bin/gfortran-11
+      #     export FC=$BREWPFX/bin/gfortran-11
+      #     export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
+      #     make -j2 install || echo "::warning title=BuildFailure::Build Failed"
 
   # build-ubuntu:
   #   runs-on: 'ubuntu-20.04'
