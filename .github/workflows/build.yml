@@ -13,24 +13,15 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os_version }}
-    strategy:
-      matrix:
-        os_version: ['ubuntu-latest', 'macos-latest']
+    runs-on: 'macos-latest'
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
         uses: actions/checkout@v2
 
       - name: Install dependencies (MacOS)
-        if: contains(matrix.platform, 'macos')
         run: |
           brew install autoconf automake texinfo gnuplot hdf5 qt curlxz icoutils glpk bison pcre2 qrupdate qhull readline fftw gl2ps suite-sparse openblas gawk gnu-sed
-
-      - name: Install dependencies (Ubuntu)
-        if: contains(matrix.platform, 'ubuntu')
-        run: |
-          sudo apt-get install -y autoconf automake texinfo gnuplot libhdf5-dev qtbase5-dev curl xz-utils icoutils libglpk-dev bison libpcre2-dev libqrupdate-dev libqhull-dev libreadline-dev fftw-dev libgl2ps-dev libsuitesparse-dev libopenblas-dev gawk sed
 
       # https://www.gnu.org/software/octave/
       - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
@@ -40,5 +31,29 @@ jobs:
 
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
         run: |
+          export BREWPFX=`brew --prefix`
+          export PATH=$GITHUB_WORKSPACE/usr/bin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin:/bin:/sbin:/usr/bin:/usr/sbin
           cd octave-$OCTAVE_VERSION
-          ./configure --prefix=$GITHIB_WORKSPACE/usr
+          ./configure --prefix=$GITHUB_WORKSPACE/usr
+
+  # build-ubuntu:
+  #   runs-on: 'ubuntu-latest'
+  #   steps:
+  #     # https://github.com/actions/checkout
+  #     - name: Checkout the commit triggering this job
+  #       uses: actions/checkout@v2
+
+  #     - name: Install dependencies (Ubuntu)
+  #       run: |
+  #         sudo apt-get install -y autoconf automake texinfo gnuplot libhdf5-dev qtbase5-dev curl xz-utils icoutils libglpk-dev bison libpcre2-dev libqrupdate-dev libqhull-dev libreadline-dev fftw-dev libgl2ps-dev libsuitesparse-dev libopenblas-dev gawk sed
+
+  #     # https://www.gnu.org/software/octave/
+  #     - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+  #       run: |
+  #         curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+  #         tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+
+  #     - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+  #       run: |
+  #         cd octave-$OCTAVE_VERSION
+  #         ./configure --prefix=$GITHUB_WORKSPACE/usr
