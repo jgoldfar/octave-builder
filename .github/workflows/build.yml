@@ -118,7 +118,8 @@ jobs:
           export F77=$BREWPFX/bin/gfortran-11
           export FC=$BREWPFX/bin/gfortran-11
           export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
-          make -j2 install || echo "::warning title=BuildFailure::Build Failed"
+          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+          make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
 
   build-ubuntu:
     runs-on: 'ubuntu-20.04'
@@ -162,4 +163,4 @@ jobs:
       - name: Build Octave
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          make -j2 || echo "::warning title=BuildFailure::Build Failed"
+          make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
