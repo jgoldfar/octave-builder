@@ -12,115 +12,115 @@ env:
   ARCH: x86_64
 
 jobs:
-  build-macos:
-    runs-on: 'macos-10.15'
-    name: Build on MacOS
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout the commit triggering this job
-        uses: actions/checkout@v2
+  # build-macos:
+  #   runs-on: 'macos-10.15'
+  #   name: Build on MacOS
+  #   steps:
+  #     # https://github.com/actions/checkout
+  #     - name: Checkout the commit triggering this job
+  #       uses: actions/checkout@v2
 
-      - name: Update Homebrew
-        run: |
-          brew update --preinstall
-          echo "::notice title=BrewPrefix::$(brew --prefix)"
-          echo "::notice title=BrewCache::$(brew --cache)"
+  #     - name: Update Homebrew
+  #       run: |
+  #         brew update --preinstall
+  #         echo "::notice title=BrewPrefix::$(brew --prefix)"
+  #         echo "::notice title=BrewCache::$(brew --cache)"
 
-        # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
-        # https://github.com/actions/cache
-      - name: Cache Homebrew Packages
-        id: cache-homebrew-packages
-        uses: actions/cache@v3
-        env:
-          cache-name: homebrew-packages
-        with:
-          # Paths to cache:
-          # /usr/local/Homebrew - installation folder of Homebrew
-          # /usr/local/Cellar - installation folder of Homebrew formulae
-          # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
-          # ~/Library/Caches/Homebrew - user-specific Homebrew caches
-          path: |
-            /usr/local/Homebrew
-            /usr/local/Cellar
-            /usr/local/Frameworks
-            /usr/local/bin
-            /usr/local/opt
-            /usr/local/lib
-            /usr/local/libexec
-            /usr/local/include
-            ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
-          restore-keys: |
-            ${{ runner.os }}-cachev1-
-            ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
+  #       # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
+  #       # https://github.com/actions/cache
+  #     - name: Cache Homebrew Packages
+  #       id: cache-homebrew-packages
+  #       uses: actions/cache@v3
+  #       env:
+  #         cache-name: homebrew-packages
+  #       with:
+  #         # Paths to cache:
+  #         # /usr/local/Homebrew - installation folder of Homebrew
+  #         # /usr/local/Cellar - installation folder of Homebrew formulae
+  #         # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
+  #         # ~/Library/Caches/Homebrew - user-specific Homebrew caches
+  #         path: |
+  #           /usr/local/Homebrew
+  #           /usr/local/Cellar
+  #           /usr/local/Frameworks
+  #           /usr/local/bin
+  #           /usr/local/opt
+  #           /usr/local/lib
+  #           /usr/local/libexec
+  #           /usr/local/include
+  #           ~/Library/Caches/Homebrew
+  #         key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cachev1-
+  #           ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
 
-      - name: Cache Octave Download
-        id: cache-octave-download
-        uses: actions/cache@v3
-        env:
-          cache-name: octave-download
-        with:
-          path: |
-            octave-*.tar.gz
-            octave-*/**
-          key:
-            octave-download-cachev2-${{ env.OCTAVE_VERSION }}
+  #     - name: Cache Octave Download
+  #       id: cache-octave-download
+  #       uses: actions/cache@v3
+  #       env:
+  #         cache-name: octave-download
+  #       with:
+  #         path: |
+  #           octave-*.tar.gz
+  #           octave-*/**
+  #         key:
+  #           octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
-      - name: Install dependencies (MacOS)
-        run: |
-          brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
+  #     - name: Install dependencies (MacOS)
+  #       run: |
+  #         brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
+  #       env:
+  #         HOMEBREW_NO_AUTO_UPDATE: 1
 
-        # https://www.gnu.org/software/octave/
-      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-        if: steps.cache-octave-download.outputs.cache-hit != 'true'
-        run: |
-          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-          tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+  #       # https://www.gnu.org/software/octave/
+  #     - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+  #       if: steps.cache-octave-download.outputs.cache-hit != 'true'
+  #       run: |
+  #         curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+  #         tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
-      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-        run: |
-          export BREWPFX=`brew --prefix`
-          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          autoreconf -i -f
-          ./configure --prefix=$GITHUB_WORKSPACE/usr \
-            --disable-dependency-tracking \
-            --disable-silent-rules \
-            --enable-link-all-dependencies \
-            --enable-shared \
-            --disable-static \
-            --with-x=no \
-            --with-portaudio \
-            --with-sndfile \
-            --with-hdf5-includedir=$BREWPFX/include \
-            --with-hdf5-libdir=$BREWPFX/lib \
-            --with-java-homedir=$BREWPFX/opt/openjdk \
-            --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
-            --with-qhull-includedir=$BREWPFX/include \
-            --with-qhull-libdir=$BREWPFX/lib \
-            CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION" \
-            LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
-            PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
-            QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
-            F77=$BREWPFX/bin/gfortran-11 \
-            QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
-            || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
-        env:
-          QCOLLECTIONGENERATOR: qhelpgenerator
+  #     - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+  #       run: |
+  #         export BREWPFX=`brew --prefix`
+  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+  #         autoreconf -i -f
+  #         ./configure --prefix=$GITHUB_WORKSPACE/usr \
+  #           --disable-dependency-tracking \
+  #           --disable-silent-rules \
+  #           --enable-link-all-dependencies \
+  #           --enable-shared \
+  #           --disable-static \
+  #           --with-x=no \
+  #           --with-portaudio \
+  #           --with-sndfile \
+  #           --with-hdf5-includedir=$BREWPFX/include \
+  #           --with-hdf5-libdir=$BREWPFX/lib \
+  #           --with-java-homedir=$BREWPFX/opt/openjdk \
+  #           --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
+  #           --with-qhull-includedir=$BREWPFX/include \
+  #           --with-qhull-libdir=$BREWPFX/lib \
+  #           CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators" \
+  #           LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
+  #           PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
+  #           QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
+  #           F77=$BREWPFX/bin/gfortran-11 \
+  #           QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
+  #           || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
+  #       env:
+  #         QCOLLECTIONGENERATOR: qhelpgenerator
 
-      - name: Build Octave
-        run: |
-          export BREWPFX=`brew --prefix`
-          export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
-          export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
-          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-          export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
-          export F77=$BREWPFX/bin/gfortran-11
-          export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
-          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
-          make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
+  #     - name: Build Octave
+  #       run: |
+  #         export BREWPFX=`brew --prefix`
+  #         export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
+  #         export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
+  #         export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+  #         export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
+  #         export F77=$BREWPFX/bin/gfortran-11
+  #         export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
+  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+  #         make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
+  #         make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
 
   build-ubuntu:
     runs-on: 'ubuntu-20.04'
@@ -159,10 +159,13 @@ jobs:
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          ./configure --prefix=$GITHUB_WORKSPACE/usr
+          ./configure --prefix=$GITHUB_WORKSPACE/usr \
+          CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
 
       - name: Build Octave
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
+          export CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
           make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
+
+# make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
