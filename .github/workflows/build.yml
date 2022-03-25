@@ -12,115 +12,449 @@ env:
   ARCH: x86_64
 
 jobs:
-  # build-macos:
-  #   runs-on: 'macos-10.15'
-  #   name: Build on MacOS
-  #   steps:
-  #     # https://github.com/actions/checkout
-  #     - name: Checkout the commit triggering this job
-  #       uses: actions/checkout@v2
+  build-macos:
+    runs-on: 'macos-10.15'
+    name: Build on MacOS
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout the commit triggering this job
+        uses: actions/checkout@v2
 
-  #     - name: Update Homebrew
-  #       run: |
-  #         brew update --preinstall
-  #         echo "::notice title=BrewPrefix::$(brew --prefix)"
-  #         echo "::notice title=BrewCache::$(brew --cache)"
+      - name: Update Homebrew
+        run: |
+          brew update --preinstall
+          echo "::notice title=BrewPrefix::$(brew --prefix)"
+          echo "::notice title=BrewCache::$(brew --cache)"
 
-  #       # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
-  #       # https://github.com/actions/cache
-  #     - name: Cache Homebrew Packages
-  #       id: cache-homebrew-packages
-  #       uses: actions/cache@v3
-  #       env:
-  #         cache-name: homebrew-packages
-  #       with:
-  #         # Paths to cache:
-  #         # /usr/local/Homebrew - installation folder of Homebrew
-  #         # /usr/local/Cellar - installation folder of Homebrew formulae
-  #         # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
-  #         # ~/Library/Caches/Homebrew - user-specific Homebrew caches
-  #         path: |
-  #           /usr/local/Homebrew
-  #           /usr/local/Cellar
-  #           /usr/local/Frameworks
-  #           /usr/local/bin
-  #           /usr/local/opt
-  #           /usr/local/lib
-  #           /usr/local/libexec
-  #           /usr/local/include
-  #           ~/Library/Caches/Homebrew
-  #         key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-cachev1-
-  #           ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
+        # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
+        # https://github.com/actions/cache
+      - name: Cache Homebrew Packages
+        id: cache-homebrew-packages
+        uses: actions/cache@v3
+        env:
+          cache-name: homebrew-packages
+        with:
+          # Paths to cache:
+          # /usr/local/Homebrew - installation folder of Homebrew
+          # /usr/local/Cellar - installation folder of Homebrew formulae
+          # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
+          # ~/Library/Caches/Homebrew - user-specific Homebrew caches
+          path: |
+            /usr/local/Homebrew
+            /usr/local/Cellar
+            /usr/local/Frameworks
+            /usr/local/bin
+            /usr/local/opt
+            /usr/local/lib
+            /usr/local/libexec
+            /usr/local/include
+            ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
+          restore-keys: |
+            ${{ runner.os }}-cachev1-
+            ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
 
-  #     - name: Cache Octave Download
-  #       id: cache-octave-download
-  #       uses: actions/cache@v3
-  #       env:
-  #         cache-name: octave-download
-  #       with:
-  #         path: |
-  #           octave-*.tar.gz
-  #           octave-*/**
-  #         key:
-  #           octave-download-cachev2-${{ env.OCTAVE_VERSION }}
+      - name: Cache Octave Download
+        id: cache-octave-download
+        uses: actions/cache@v3
+        env:
+          cache-name: octave-download
+        with:
+          path: |
+            octave-*.tar.gz
+            octave-*/**
+          key:
+            octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
-  #     - name: Install dependencies (MacOS)
-  #       run: |
-  #         brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
-  #       env:
-  #         HOMEBREW_NO_AUTO_UPDATE: 1
+      - name: Install dependencies (MacOS)
+        run: |
+          brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
 
-  #       # https://www.gnu.org/software/octave/
-  #     - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-  #       if: steps.cache-octave-download.outputs.cache-hit != 'true'
-  #       run: |
-  #         curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-  #         tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+        # https://www.gnu.org/software/octave/
+      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+        if: steps.cache-octave-download.outputs.cache-hit != 'true'
+        run: |
+          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+          tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
-  #     - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-  #       run: |
-  #         export BREWPFX=`brew --prefix`
-  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-  #         autoreconf -i -f
-  #         ./configure --prefix=$GITHUB_WORKSPACE/usr \
-  #           --disable-dependency-tracking \
-  #           --disable-silent-rules \
-  #           --enable-link-all-dependencies \
-  #           --enable-shared \
-  #           --disable-static \
-  #           --with-x=no \
-  #           --with-portaudio \
-  #           --with-sndfile \
-  #           --with-hdf5-includedir=$BREWPFX/include \
-  #           --with-hdf5-libdir=$BREWPFX/lib \
-  #           --with-java-homedir=$BREWPFX/opt/openjdk \
-  #           --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
-  #           --with-qhull-includedir=$BREWPFX/include \
-  #           --with-qhull-libdir=$BREWPFX/lib \
-  #           CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators" \
-  #           LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
-  #           PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
-  #           QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
-  #           F77=$BREWPFX/bin/gfortran-11 \
-  #           QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
-  #           || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
-  #       env:
-  #         QCOLLECTIONGENERATOR: qhelpgenerator
+      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+        run: |
+          export BREWPFX=`brew --prefix`
+          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+          autoreconf -i -f
+          ./configure --prefix=$GITHUB_WORKSPACE/usr \
+            --disable-dependency-tracking \
+            --disable-silent-rules \
+            --enable-link-all-dependencies \
+            --enable-shared \
+            --disable-static \
+            --with-x=no \
+            --with-portaudio \
+            --with-sndfile \
+            --with-hdf5-includedir=$BREWPFX/include \
+            --with-hdf5-libdir=$BREWPFX/lib \
+            --with-java-homedir=$BREWPFX/opt/openjdk \
+            --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
+            --with-qhull-includedir=$BREWPFX/include \
+            --with-qhull-libdir=$BREWPFX/lib \
+            CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include" \
+            LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
+            PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
+            QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
+            F77=$BREWPFX/bin/gfortran-11 \
+            QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
+            || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
+        env:
+          QCOLLECTIONGENERATOR: qhelpgenerator
 
-  #     - name: Build Octave
-  #       run: |
-  #         export BREWPFX=`brew --prefix`
-  #         export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
-  #         export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
-  #         export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-  #         export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
-  #         export F77=$BREWPFX/bin/gfortran-11
-  #         export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
-  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-  #         make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
-  #         make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
+      - name: Build Octave
+        run: |
+          export BREWPFX=`brew --prefix`
+          export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
+          export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
+          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+          export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
+          export F77=$BREWPFX/bin/gfortran-11
+          export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
+          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+          make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
+          make \
+          libinterp/builtin-defun-decls.h \
+          libinterp/corefcn/graphics.h \
+          libinterp/corefcn/mxarray.h \
+          libinterp/corefcn/default-defs.h \
+          liboctave/operators/mx-ops.h \
+          liboctave/operators/mx-cdm-dm.h \
+          liboctave/operators/mx-dm-cdm.h \
+          liboctave/operators/mx-cs-dm.h \
+          liboctave/operators/mx-cs-m.h \
+          liboctave/operators/mx-cs-nda.h \
+          liboctave/operators/mx-cdm-cm.h \
+          liboctave/operators/mx-cdm-m.h \
+          liboctave/operators/mx-cdm-s.h \
+          liboctave/operators/mx-cm-cdm.h \
+          liboctave/operators/mx-cm-dm.h \
+          liboctave/operators/mx-cm-m.h \
+          liboctave/operators/mx-cnda-nda.h \
+          liboctave/operators/mx-cm-s.h \
+          liboctave/operators/mx-cnda-s.h \
+          liboctave/operators/mx-dm-cs.h \
+          liboctave/operators/mx-dm-cm.h \
+          liboctave/operators/mx-m-cs.h \
+          liboctave/operators/mx-nda-cs.h \
+          liboctave/operators/mx-m-cdm.h \
+          liboctave/operators/mx-m-cm.h \
+          liboctave/operators/mx-nda-cnda.h \
+          liboctave/operators/mx-s-cdm.h \
+          liboctave/operators/mx-s-cm.h \
+          liboctave/operators/mx-s-cnda.h \
+          liboctave/operators/mx-dm-m.h \
+          liboctave/operators/mx-m-dm.h \
+          liboctave/operators/mx-fcdm-fdm.h \
+          liboctave/operators/mx-fdm-fcdm.h \
+          liboctave/operators/mx-fcs-fdm.h \
+          liboctave/operators/mx-fcs-fm.h \
+          liboctave/operators/mx-fcs-fnda.h \
+          liboctave/operators/mx-fcdm-fcm.h \
+          liboctave/operators/mx-fcdm-fm.h \
+          liboctave/operators/mx-fcdm-fs.h \
+          liboctave/operators/mx-fcm-fcdm.h \
+          liboctave/operators/mx-fcm-fdm.h \
+          liboctave/operators/mx-fcm-fm.h \
+          liboctave/operators/mx-fcnda-fnda.h \
+          liboctave/operators/mx-fcm-fs.h \
+          liboctave/operators/mx-fcnda-fs.h \
+          liboctave/operators/mx-fdm-fcs.h \
+          liboctave/operators/mx-fdm-fcm.h \
+          liboctave/operators/mx-fm-fcs.h \
+          liboctave/operators/mx-fnda-fcs.h \
+          liboctave/operators/mx-fm-fcdm.h \
+          liboctave/operators/mx-fm-fcm.h \
+          liboctave/operators/mx-fnda-fcnda.h \
+          liboctave/operators/mx-fs-fcdm.h \
+          liboctave/operators/mx-fs-fcm.h \
+          liboctave/operators/mx-fs-fcnda.h \
+          liboctave/operators/mx-fdm-fm.h \
+          liboctave/operators/mx-fm-fdm.h \
+          liboctave/operators/mx-pm-m.h \
+          liboctave/operators/mx-m-pm.h \
+          liboctave/operators/mx-pm-cm.h \
+          liboctave/operators/mx-cm-pm.h \
+          liboctave/operators/mx-pm-fm.h \
+          liboctave/operators/mx-fm-pm.h \
+          liboctave/operators/mx-pm-fcm.h \
+          liboctave/operators/mx-fcm-pm.h \
+          liboctave/operators/mx-s-i8nda.h \
+          liboctave/operators/mx-i8nda-s.h \
+          liboctave/operators/mx-s-ui8nda.h \
+          liboctave/operators/mx-ui8nda-s.h \
+          liboctave/operators/mx-s-i16nda.h \
+          liboctave/operators/mx-i16nda-s.h \
+          liboctave/operators/mx-s-ui16nda.h \
+          liboctave/operators/mx-ui16nda-s.h \
+          liboctave/operators/mx-s-i32nda.h \
+          liboctave/operators/mx-i32nda-s.h \
+          liboctave/operators/mx-s-ui32nda.h \
+          liboctave/operators/mx-ui32nda-s.h \
+          liboctave/operators/mx-s-i64nda.h \
+          liboctave/operators/mx-i64nda-s.h \
+          liboctave/operators/mx-s-ui64nda.h \
+          liboctave/operators/mx-ui64nda-s.h \
+          liboctave/operators/mx-fs-i8nda.h \
+          liboctave/operators/mx-i8nda-fs.h \
+          liboctave/operators/mx-fs-ui8nda.h \
+          liboctave/operators/mx-ui8nda-fs.h \
+          liboctave/operators/mx-fs-i16nda.h \
+          liboctave/operators/mx-i16nda-fs.h \
+          liboctave/operators/mx-fs-ui16nda.h \
+          liboctave/operators/mx-ui16nda-fs.h \
+          liboctave/operators/mx-fs-i32nda.h \
+          liboctave/operators/mx-i32nda-fs.h \
+          liboctave/operators/mx-fs-ui32nda.h \
+          liboctave/operators/mx-ui32nda-fs.h \
+          liboctave/operators/mx-fs-i64nda.h \
+          liboctave/operators/mx-i64nda-fs.h \
+          liboctave/operators/mx-fs-ui64nda.h \
+          liboctave/operators/mx-ui64nda-fs.h \
+          liboctave/operators/mx-nda-i8.h \
+          liboctave/operators/mx-i8-nda.h \
+          liboctave/operators/mx-nda-ui8.h \
+          liboctave/operators/mx-ui8-nda.h \
+          liboctave/operators/mx-nda-i16.h \
+          liboctave/operators/mx-i16-nda.h \
+          liboctave/operators/mx-nda-ui16.h \
+          liboctave/operators/mx-ui16-nda.h \
+          liboctave/operators/mx-nda-i32.h \
+          liboctave/operators/mx-i32-nda.h \
+          liboctave/operators/mx-nda-ui32.h \
+          liboctave/operators/mx-ui32-nda.h \
+          liboctave/operators/mx-nda-i64.h \
+          liboctave/operators/mx-i64-nda.h \
+          liboctave/operators/mx-nda-ui64.h \
+          liboctave/operators/mx-ui64-nda.h \
+          liboctave/operators/mx-fnda-i8.h \
+          liboctave/operators/mx-i8-fnda.h \
+          liboctave/operators/mx-fnda-ui8.h \
+          liboctave/operators/mx-ui8-fnda.h \
+          liboctave/operators/mx-fnda-i16.h \
+          liboctave/operators/mx-i16-fnda.h \
+          liboctave/operators/mx-fnda-ui16.h \
+          liboctave/operators/mx-ui16-fnda.h \
+          liboctave/operators/mx-fnda-i32.h \
+          liboctave/operators/mx-i32-fnda.h \
+          liboctave/operators/mx-fnda-ui32.h \
+          liboctave/operators/mx-ui32-fnda.h \
+          liboctave/operators/mx-fnda-i64.h \
+          liboctave/operators/mx-i64-fnda.h \
+          liboctave/operators/mx-fnda-ui64.h \
+          liboctave/operators/mx-ui64-fnda.h \
+          liboctave/operators/mx-nda-i8nda.h \
+          liboctave/operators/mx-i8nda-nda.h \
+          liboctave/operators/mx-nda-ui8nda.h \
+          liboctave/operators/mx-ui8nda-nda.h \
+          liboctave/operators/mx-nda-i16nda.h \
+          liboctave/operators/mx-i16nda-nda.h \
+          liboctave/operators/mx-nda-ui16nda.h \
+          liboctave/operators/mx-ui16nda-nda.h \
+          liboctave/operators/mx-nda-i32nda.h \
+          liboctave/operators/mx-i32nda-nda.h \
+          liboctave/operators/mx-nda-ui32nda.h \
+          liboctave/operators/mx-ui32nda-nda.h \
+          liboctave/operators/mx-nda-i64nda.h \
+          liboctave/operators/mx-i64nda-nda.h \
+          liboctave/operators/mx-nda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-nda.h \
+          liboctave/operators/mx-fnda-i8nda.h \
+          liboctave/operators/mx-i8nda-fnda.h \
+          liboctave/operators/mx-fnda-ui8nda.h \
+          liboctave/operators/mx-ui8nda-fnda.h \
+          liboctave/operators/mx-fnda-i16nda.h \
+          liboctave/operators/mx-i16nda-fnda.h \
+          liboctave/operators/mx-fnda-ui16nda.h \
+          liboctave/operators/mx-ui16nda-fnda.h \
+          liboctave/operators/mx-fnda-i32nda.h \
+          liboctave/operators/mx-i32nda-fnda.h \
+          liboctave/operators/mx-fnda-ui32nda.h \
+          liboctave/operators/mx-ui32nda-fnda.h \
+          liboctave/operators/mx-fnda-i64nda.h \
+          liboctave/operators/mx-i64nda-fnda.h \
+          liboctave/operators/mx-fnda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-fnda.h \
+          liboctave/operators/mx-i8nda-ui8.h \
+          liboctave/operators/mx-i8nda-i16.h \
+          liboctave/operators/mx-i8nda-ui16.h \
+          liboctave/operators/mx-i8nda-i32.h \
+          liboctave/operators/mx-i8nda-ui32.h \
+          liboctave/operators/mx-i8nda-i64.h \
+          liboctave/operators/mx-i8nda-ui64.h \
+          liboctave/operators/mx-i16nda-i8.h \
+          liboctave/operators/mx-i16nda-ui8.h \
+          liboctave/operators/mx-i16nda-ui16.h \
+          liboctave/operators/mx-i16nda-i32.h \
+          liboctave/operators/mx-i16nda-ui32.h \
+          liboctave/operators/mx-i16nda-i64.h \
+          liboctave/operators/mx-i16nda-ui64.h \
+          liboctave/operators/mx-i32nda-i8.h \
+          liboctave/operators/mx-i32nda-ui8.h \
+          liboctave/operators/mx-i32nda-i16.h \
+          liboctave/operators/mx-i32nda-ui16.h \
+          liboctave/operators/mx-i32nda-ui32.h \
+          liboctave/operators/mx-i32nda-i64.h \
+          liboctave/operators/mx-i32nda-ui64.h \
+          liboctave/operators/mx-i64nda-i8.h \
+          liboctave/operators/mx-i64nda-ui8.h \
+          liboctave/operators/mx-i64nda-i16.h \
+          liboctave/operators/mx-i64nda-ui16.h \
+          liboctave/operators/mx-i64nda-i32.h \
+          liboctave/operators/mx-i64nda-ui32.h \
+          liboctave/operators/mx-i64nda-ui64.h \
+          liboctave/operators/mx-ui8nda-i8.h \
+          liboctave/operators/mx-ui8nda-i16.h \
+          liboctave/operators/mx-ui8nda-ui16.h \
+          liboctave/operators/mx-ui8nda-i32.h \
+          liboctave/operators/mx-ui8nda-ui32.h \
+          liboctave/operators/mx-ui8nda-i64.h \
+          liboctave/operators/mx-ui8nda-ui64.h \
+          liboctave/operators/mx-ui16nda-i8.h \
+          liboctave/operators/mx-ui16nda-ui8.h \
+          liboctave/operators/mx-ui16nda-i16.h \
+          liboctave/operators/mx-ui16nda-i32.h \
+          liboctave/operators/mx-ui16nda-ui32.h \
+          liboctave/operators/mx-ui16nda-i64.h \
+          liboctave/operators/mx-ui16nda-ui64.h \
+          liboctave/operators/mx-ui32nda-i8.h \
+          liboctave/operators/mx-ui32nda-ui8.h \
+          liboctave/operators/mx-ui32nda-i16.h \
+          liboctave/operators/mx-ui32nda-ui16.h \
+          liboctave/operators/mx-ui32nda-i32.h \
+          liboctave/operators/mx-ui32nda-i64.h \
+          liboctave/operators/mx-ui32nda-ui64.h \
+          liboctave/operators/mx-ui64nda-i8.h \
+          liboctave/operators/mx-ui64nda-ui8.h \
+          liboctave/operators/mx-ui64nda-i16.h \
+          liboctave/operators/mx-ui64nda-ui16.h \
+          liboctave/operators/mx-ui64nda-i32.h \
+          liboctave/operators/mx-ui64nda-ui32.h \
+          liboctave/operators/mx-ui64nda-i64.h \
+          liboctave/operators/mx-i8-ui8nda.h \
+          liboctave/operators/mx-i8-i16nda.h \
+          liboctave/operators/mx-i8-ui16nda.h \
+          liboctave/operators/mx-i8-i32nda.h \
+          liboctave/operators/mx-i8-ui32nda.h \
+          liboctave/operators/mx-i8-i64nda.h \
+          liboctave/operators/mx-i8-ui64nda.h \
+          liboctave/operators/mx-i16-i8nda.h \
+          liboctave/operators/mx-i16-ui8nda.h \
+          liboctave/operators/mx-i16-ui16nda.h \
+          liboctave/operators/mx-i16-i32nda.h \
+          liboctave/operators/mx-i16-ui32nda.h \
+          liboctave/operators/mx-i16-i64nda.h \
+          liboctave/operators/mx-i16-ui64nda.h \
+          liboctave/operators/mx-i32-i8nda.h \
+          liboctave/operators/mx-i32-ui8nda.h \
+          liboctave/operators/mx-i32-i16nda.h \
+          liboctave/operators/mx-i32-ui16nda.h \
+          liboctave/operators/mx-i32-ui32nda.h \
+          liboctave/operators/mx-i32-i64nda.h \
+          liboctave/operators/mx-i32-ui64nda.h \
+          liboctave/operators/mx-i64-i8nda.h \
+          liboctave/operators/mx-i64-ui8nda.h \
+          liboctave/operators/mx-i64-i16nda.h \
+          liboctave/operators/mx-i64-ui16nda.h \
+          liboctave/operators/mx-i64-i32nda.h \
+          liboctave/operators/mx-i64-ui32nda.h \
+          liboctave/operators/mx-i64-ui64nda.h \
+          liboctave/operators/mx-ui8-i8nda.h \
+          liboctave/operators/mx-ui8-i16nda.h \
+          liboctave/operators/mx-ui8-ui16nda.h \
+          liboctave/operators/mx-ui8-i32nda.h \
+          liboctave/operators/mx-ui8-ui32nda.h \
+          liboctave/operators/mx-ui8-i64nda.h \
+          liboctave/operators/mx-ui8-ui64nda.h \
+          liboctave/operators/mx-ui16-i8nda.h \
+          liboctave/operators/mx-ui16-ui8nda.h \
+          liboctave/operators/mx-ui16-i16nda.h \
+          liboctave/operators/mx-ui16-i32nda.h \
+          liboctave/operators/mx-ui16-ui32nda.h \
+          liboctave/operators/mx-ui16-i64nda.h \
+          liboctave/operators/mx-ui16-ui64nda.h \
+          liboctave/operators/mx-ui32-i8nda.h \
+          liboctave/operators/mx-ui32-ui8nda.h \
+          liboctave/operators/mx-ui32-i16nda.h \
+          liboctave/operators/mx-ui32-ui16nda.h \
+          liboctave/operators/mx-ui32-i32nda.h \
+          liboctave/operators/mx-ui32-i64nda.h \
+          liboctave/operators/mx-ui32-ui64nda.h \
+          liboctave/operators/mx-ui64-i8nda.h \
+          liboctave/operators/mx-ui64-ui8nda.h \
+          liboctave/operators/mx-ui64-i16nda.h \
+          liboctave/operators/mx-ui64-ui16nda.h \
+          liboctave/operators/mx-ui64-i32nda.h \
+          liboctave/operators/mx-ui64-ui32nda.h \
+          liboctave/operators/mx-ui64-i64nda.h \
+          liboctave/operators/mx-i8nda-ui8nda.h \
+          liboctave/operators/mx-i8nda-i16nda.h \
+          liboctave/operators/mx-i8nda-ui16nda.h \
+          liboctave/operators/mx-i8nda-i32nda.h \
+          liboctave/operators/mx-i8nda-ui32nda.h \
+          liboctave/operators/mx-i8nda-i64nda.h \
+          liboctave/operators/mx-i8nda-ui64nda.h \
+          liboctave/operators/mx-i16nda-i8nda.h \
+          liboctave/operators/mx-i16nda-ui8nda.h \
+          liboctave/operators/mx-i16nda-ui16nda.h \
+          liboctave/operators/mx-i16nda-i32nda.h \
+          liboctave/operators/mx-i16nda-ui32nda.h \
+          liboctave/operators/mx-i16nda-i64nda.h \
+          liboctave/operators/mx-i16nda-ui64nda.h \
+          liboctave/operators/mx-i32nda-i8nda.h \
+          liboctave/operators/mx-i32nda-ui8nda.h \
+          liboctave/operators/mx-i32nda-i16nda.h \
+          liboctave/operators/mx-i32nda-ui16nda.h \
+          liboctave/operators/mx-i32nda-ui32nda.h \
+          liboctave/operators/mx-i32nda-i64nda.h \
+          liboctave/operators/mx-i32nda-ui64nda.h \
+          liboctave/operators/mx-i64nda-i8nda.h \
+          liboctave/operators/mx-i64nda-ui8nda.h \
+          liboctave/operators/mx-i64nda-i16nda.h \
+          liboctave/operators/mx-i64nda-ui16nda.h \
+          liboctave/operators/mx-i64nda-i32nda.h \
+          liboctave/operators/mx-i64nda-ui32nda.h \
+          liboctave/operators/mx-i64nda-ui64nda.h \
+          liboctave/operators/mx-ui8nda-i8nda.h \
+          liboctave/operators/mx-ui8nda-i16nda.h \
+          liboctave/operators/mx-ui8nda-ui16nda.h \
+          liboctave/operators/mx-ui8nda-i32nda.h \
+          liboctave/operators/mx-ui8nda-ui32nda.h \
+          liboctave/operators/mx-ui8nda-i64nda.h \
+          liboctave/operators/mx-ui8nda-ui64nda.h \
+          liboctave/operators/mx-ui16nda-i8nda.h \
+          liboctave/operators/mx-ui16nda-ui8nda.h \
+          liboctave/operators/mx-ui16nda-i16nda.h \
+          liboctave/operators/mx-ui16nda-i32nda.h \
+          liboctave/operators/mx-ui16nda-ui32nda.h \
+          liboctave/operators/mx-ui16nda-i64nda.h \
+          liboctave/operators/mx-ui16nda-ui64nda.h \
+          liboctave/operators/mx-ui32nda-i8nda.h \
+          liboctave/operators/mx-ui32nda-ui8nda.h \
+          liboctave/operators/mx-ui32nda-i16nda.h \
+          liboctave/operators/mx-ui32nda-ui16nda.h \
+          liboctave/operators/mx-ui32nda-i32nda.h \
+          liboctave/operators/mx-ui32nda-i64nda.h \
+          liboctave/operators/mx-ui32nda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-i8nda.h \
+          liboctave/operators/mx-ui64nda-ui8nda.h \
+          liboctave/operators/mx-ui64nda-i16nda.h \
+          liboctave/operators/mx-ui64nda-ui16nda.h \
+          liboctave/operators/mx-ui64nda-i32nda.h \
+          liboctave/operators/mx-ui64nda-ui32nda.h \
+          liboctave/operators/mx-ui64nda-i64nda.h \
+          liboctave/version.h \
+          liboctave/operators/smx-sm-cs.h liboctave/operators/smx-cs-sm.h liboctave/operators/smx-scm-s.h liboctave/operators/smx-s-scm.h liboctave/operators/smx-scm-sm.h liboctave/operators/smx-sm-scm.h liboctave/operators/smx-m-sm.h liboctave/operators/smx-m-scm.h liboctave/operators/smx-cm-sm.h liboctave/operators/smx-cm-scm.h liboctave/operators/smx-sm-m.h liboctave/operators/smx-scm-m.h liboctave/operators/smx-sm-cm.h liboctave/operators/smx-scm-cm.h liboctave/operators/smx-bm-sbm.h liboctave/operators/smx-sbm-bm.h \
+          liboctave/operators/vx-ccv-cv.h liboctave/operators/vx-ccv-s.h liboctave/operators/vx-crv-rv.h liboctave/operators/vx-crv-s.h liboctave/operators/vx-cs-cv.h liboctave/operators/vx-cs-rv.h liboctave/operators/vx-cv-ccv.h liboctave/operators/vx-cv-cs.h liboctave/operators/vx-rv-crv.h liboctave/operators/vx-rv-cs.h liboctave/operators/vx-s-ccv.h liboctave/operators/vx-s-crv.h liboctave/operators/vx-fccv-fcv.h liboctave/operators/vx-fccv-fs.h liboctave/operators/vx-fcrv-frv.h liboctave/operators/vx-fcrv-fs.h liboctave/operators/vx-fcs-fcv.h liboctave/operators/vx-fcs-frv.h liboctave/operators/vx-fcv-fccv.h liboctave/operators/vx-fcv-fcs.h liboctave/operators/vx-frv-fcrv.h liboctave/operators/vx-frv-fcs.h liboctave/operators/vx-fs-fccv.h liboctave/operators/vx-fs-fcrv.h \
+          || echo "::warning title=OctaveConfigFailure::Failed to build mx-ops.h or associated file"
+          make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
 
   build-ubuntu:
     runs-on: 'ubuntu-20.04'
@@ -162,10 +496,344 @@ jobs:
           ./configure --prefix=$GITHUB_WORKSPACE/usr \
           CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
 
+      # Why aren't the necessary header files being generated? Not clear...
+      # Grabbed these from the Makefile SMX_OP_INC, VX_OP_INC, MX_OP_INC
       - name: Build Octave
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          export CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
+          make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
+          make \
+          libinterp/builtin-defun-decls.h \
+          libinterp/corefcn/graphics.h \
+          libinterp/corefcn/mxarray.h \
+          libinterp/corefcn/default-defs.h \
+          liboctave/operators/mx-ops.h \
+          liboctave/operators/mx-cdm-dm.h \
+          liboctave/operators/mx-dm-cdm.h \
+          liboctave/operators/mx-cs-dm.h \
+          liboctave/operators/mx-cs-m.h \
+          liboctave/operators/mx-cs-nda.h \
+          liboctave/operators/mx-cdm-cm.h \
+          liboctave/operators/mx-cdm-m.h \
+          liboctave/operators/mx-cdm-s.h \
+          liboctave/operators/mx-cm-cdm.h \
+          liboctave/operators/mx-cm-dm.h \
+          liboctave/operators/mx-cm-m.h \
+          liboctave/operators/mx-cnda-nda.h \
+          liboctave/operators/mx-cm-s.h \
+          liboctave/operators/mx-cnda-s.h \
+          liboctave/operators/mx-dm-cs.h \
+          liboctave/operators/mx-dm-cm.h \
+          liboctave/operators/mx-m-cs.h \
+          liboctave/operators/mx-nda-cs.h \
+          liboctave/operators/mx-m-cdm.h \
+          liboctave/operators/mx-m-cm.h \
+          liboctave/operators/mx-nda-cnda.h \
+          liboctave/operators/mx-s-cdm.h \
+          liboctave/operators/mx-s-cm.h \
+          liboctave/operators/mx-s-cnda.h \
+          liboctave/operators/mx-dm-m.h \
+          liboctave/operators/mx-m-dm.h \
+          liboctave/operators/mx-fcdm-fdm.h \
+          liboctave/operators/mx-fdm-fcdm.h \
+          liboctave/operators/mx-fcs-fdm.h \
+          liboctave/operators/mx-fcs-fm.h \
+          liboctave/operators/mx-fcs-fnda.h \
+          liboctave/operators/mx-fcdm-fcm.h \
+          liboctave/operators/mx-fcdm-fm.h \
+          liboctave/operators/mx-fcdm-fs.h \
+          liboctave/operators/mx-fcm-fcdm.h \
+          liboctave/operators/mx-fcm-fdm.h \
+          liboctave/operators/mx-fcm-fm.h \
+          liboctave/operators/mx-fcnda-fnda.h \
+          liboctave/operators/mx-fcm-fs.h \
+          liboctave/operators/mx-fcnda-fs.h \
+          liboctave/operators/mx-fdm-fcs.h \
+          liboctave/operators/mx-fdm-fcm.h \
+          liboctave/operators/mx-fm-fcs.h \
+          liboctave/operators/mx-fnda-fcs.h \
+          liboctave/operators/mx-fm-fcdm.h \
+          liboctave/operators/mx-fm-fcm.h \
+          liboctave/operators/mx-fnda-fcnda.h \
+          liboctave/operators/mx-fs-fcdm.h \
+          liboctave/operators/mx-fs-fcm.h \
+          liboctave/operators/mx-fs-fcnda.h \
+          liboctave/operators/mx-fdm-fm.h \
+          liboctave/operators/mx-fm-fdm.h \
+          liboctave/operators/mx-pm-m.h \
+          liboctave/operators/mx-m-pm.h \
+          liboctave/operators/mx-pm-cm.h \
+          liboctave/operators/mx-cm-pm.h \
+          liboctave/operators/mx-pm-fm.h \
+          liboctave/operators/mx-fm-pm.h \
+          liboctave/operators/mx-pm-fcm.h \
+          liboctave/operators/mx-fcm-pm.h \
+          liboctave/operators/mx-s-i8nda.h \
+          liboctave/operators/mx-i8nda-s.h \
+          liboctave/operators/mx-s-ui8nda.h \
+          liboctave/operators/mx-ui8nda-s.h \
+          liboctave/operators/mx-s-i16nda.h \
+          liboctave/operators/mx-i16nda-s.h \
+          liboctave/operators/mx-s-ui16nda.h \
+          liboctave/operators/mx-ui16nda-s.h \
+          liboctave/operators/mx-s-i32nda.h \
+          liboctave/operators/mx-i32nda-s.h \
+          liboctave/operators/mx-s-ui32nda.h \
+          liboctave/operators/mx-ui32nda-s.h \
+          liboctave/operators/mx-s-i64nda.h \
+          liboctave/operators/mx-i64nda-s.h \
+          liboctave/operators/mx-s-ui64nda.h \
+          liboctave/operators/mx-ui64nda-s.h \
+          liboctave/operators/mx-fs-i8nda.h \
+          liboctave/operators/mx-i8nda-fs.h \
+          liboctave/operators/mx-fs-ui8nda.h \
+          liboctave/operators/mx-ui8nda-fs.h \
+          liboctave/operators/mx-fs-i16nda.h \
+          liboctave/operators/mx-i16nda-fs.h \
+          liboctave/operators/mx-fs-ui16nda.h \
+          liboctave/operators/mx-ui16nda-fs.h \
+          liboctave/operators/mx-fs-i32nda.h \
+          liboctave/operators/mx-i32nda-fs.h \
+          liboctave/operators/mx-fs-ui32nda.h \
+          liboctave/operators/mx-ui32nda-fs.h \
+          liboctave/operators/mx-fs-i64nda.h \
+          liboctave/operators/mx-i64nda-fs.h \
+          liboctave/operators/mx-fs-ui64nda.h \
+          liboctave/operators/mx-ui64nda-fs.h \
+          liboctave/operators/mx-nda-i8.h \
+          liboctave/operators/mx-i8-nda.h \
+          liboctave/operators/mx-nda-ui8.h \
+          liboctave/operators/mx-ui8-nda.h \
+          liboctave/operators/mx-nda-i16.h \
+          liboctave/operators/mx-i16-nda.h \
+          liboctave/operators/mx-nda-ui16.h \
+          liboctave/operators/mx-ui16-nda.h \
+          liboctave/operators/mx-nda-i32.h \
+          liboctave/operators/mx-i32-nda.h \
+          liboctave/operators/mx-nda-ui32.h \
+          liboctave/operators/mx-ui32-nda.h \
+          liboctave/operators/mx-nda-i64.h \
+          liboctave/operators/mx-i64-nda.h \
+          liboctave/operators/mx-nda-ui64.h \
+          liboctave/operators/mx-ui64-nda.h \
+          liboctave/operators/mx-fnda-i8.h \
+          liboctave/operators/mx-i8-fnda.h \
+          liboctave/operators/mx-fnda-ui8.h \
+          liboctave/operators/mx-ui8-fnda.h \
+          liboctave/operators/mx-fnda-i16.h \
+          liboctave/operators/mx-i16-fnda.h \
+          liboctave/operators/mx-fnda-ui16.h \
+          liboctave/operators/mx-ui16-fnda.h \
+          liboctave/operators/mx-fnda-i32.h \
+          liboctave/operators/mx-i32-fnda.h \
+          liboctave/operators/mx-fnda-ui32.h \
+          liboctave/operators/mx-ui32-fnda.h \
+          liboctave/operators/mx-fnda-i64.h \
+          liboctave/operators/mx-i64-fnda.h \
+          liboctave/operators/mx-fnda-ui64.h \
+          liboctave/operators/mx-ui64-fnda.h \
+          liboctave/operators/mx-nda-i8nda.h \
+          liboctave/operators/mx-i8nda-nda.h \
+          liboctave/operators/mx-nda-ui8nda.h \
+          liboctave/operators/mx-ui8nda-nda.h \
+          liboctave/operators/mx-nda-i16nda.h \
+          liboctave/operators/mx-i16nda-nda.h \
+          liboctave/operators/mx-nda-ui16nda.h \
+          liboctave/operators/mx-ui16nda-nda.h \
+          liboctave/operators/mx-nda-i32nda.h \
+          liboctave/operators/mx-i32nda-nda.h \
+          liboctave/operators/mx-nda-ui32nda.h \
+          liboctave/operators/mx-ui32nda-nda.h \
+          liboctave/operators/mx-nda-i64nda.h \
+          liboctave/operators/mx-i64nda-nda.h \
+          liboctave/operators/mx-nda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-nda.h \
+          liboctave/operators/mx-fnda-i8nda.h \
+          liboctave/operators/mx-i8nda-fnda.h \
+          liboctave/operators/mx-fnda-ui8nda.h \
+          liboctave/operators/mx-ui8nda-fnda.h \
+          liboctave/operators/mx-fnda-i16nda.h \
+          liboctave/operators/mx-i16nda-fnda.h \
+          liboctave/operators/mx-fnda-ui16nda.h \
+          liboctave/operators/mx-ui16nda-fnda.h \
+          liboctave/operators/mx-fnda-i32nda.h \
+          liboctave/operators/mx-i32nda-fnda.h \
+          liboctave/operators/mx-fnda-ui32nda.h \
+          liboctave/operators/mx-ui32nda-fnda.h \
+          liboctave/operators/mx-fnda-i64nda.h \
+          liboctave/operators/mx-i64nda-fnda.h \
+          liboctave/operators/mx-fnda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-fnda.h \
+          liboctave/operators/mx-i8nda-ui8.h \
+          liboctave/operators/mx-i8nda-i16.h \
+          liboctave/operators/mx-i8nda-ui16.h \
+          liboctave/operators/mx-i8nda-i32.h \
+          liboctave/operators/mx-i8nda-ui32.h \
+          liboctave/operators/mx-i8nda-i64.h \
+          liboctave/operators/mx-i8nda-ui64.h \
+          liboctave/operators/mx-i16nda-i8.h \
+          liboctave/operators/mx-i16nda-ui8.h \
+          liboctave/operators/mx-i16nda-ui16.h \
+          liboctave/operators/mx-i16nda-i32.h \
+          liboctave/operators/mx-i16nda-ui32.h \
+          liboctave/operators/mx-i16nda-i64.h \
+          liboctave/operators/mx-i16nda-ui64.h \
+          liboctave/operators/mx-i32nda-i8.h \
+          liboctave/operators/mx-i32nda-ui8.h \
+          liboctave/operators/mx-i32nda-i16.h \
+          liboctave/operators/mx-i32nda-ui16.h \
+          liboctave/operators/mx-i32nda-ui32.h \
+          liboctave/operators/mx-i32nda-i64.h \
+          liboctave/operators/mx-i32nda-ui64.h \
+          liboctave/operators/mx-i64nda-i8.h \
+          liboctave/operators/mx-i64nda-ui8.h \
+          liboctave/operators/mx-i64nda-i16.h \
+          liboctave/operators/mx-i64nda-ui16.h \
+          liboctave/operators/mx-i64nda-i32.h \
+          liboctave/operators/mx-i64nda-ui32.h \
+          liboctave/operators/mx-i64nda-ui64.h \
+          liboctave/operators/mx-ui8nda-i8.h \
+          liboctave/operators/mx-ui8nda-i16.h \
+          liboctave/operators/mx-ui8nda-ui16.h \
+          liboctave/operators/mx-ui8nda-i32.h \
+          liboctave/operators/mx-ui8nda-ui32.h \
+          liboctave/operators/mx-ui8nda-i64.h \
+          liboctave/operators/mx-ui8nda-ui64.h \
+          liboctave/operators/mx-ui16nda-i8.h \
+          liboctave/operators/mx-ui16nda-ui8.h \
+          liboctave/operators/mx-ui16nda-i16.h \
+          liboctave/operators/mx-ui16nda-i32.h \
+          liboctave/operators/mx-ui16nda-ui32.h \
+          liboctave/operators/mx-ui16nda-i64.h \
+          liboctave/operators/mx-ui16nda-ui64.h \
+          liboctave/operators/mx-ui32nda-i8.h \
+          liboctave/operators/mx-ui32nda-ui8.h \
+          liboctave/operators/mx-ui32nda-i16.h \
+          liboctave/operators/mx-ui32nda-ui16.h \
+          liboctave/operators/mx-ui32nda-i32.h \
+          liboctave/operators/mx-ui32nda-i64.h \
+          liboctave/operators/mx-ui32nda-ui64.h \
+          liboctave/operators/mx-ui64nda-i8.h \
+          liboctave/operators/mx-ui64nda-ui8.h \
+          liboctave/operators/mx-ui64nda-i16.h \
+          liboctave/operators/mx-ui64nda-ui16.h \
+          liboctave/operators/mx-ui64nda-i32.h \
+          liboctave/operators/mx-ui64nda-ui32.h \
+          liboctave/operators/mx-ui64nda-i64.h \
+          liboctave/operators/mx-i8-ui8nda.h \
+          liboctave/operators/mx-i8-i16nda.h \
+          liboctave/operators/mx-i8-ui16nda.h \
+          liboctave/operators/mx-i8-i32nda.h \
+          liboctave/operators/mx-i8-ui32nda.h \
+          liboctave/operators/mx-i8-i64nda.h \
+          liboctave/operators/mx-i8-ui64nda.h \
+          liboctave/operators/mx-i16-i8nda.h \
+          liboctave/operators/mx-i16-ui8nda.h \
+          liboctave/operators/mx-i16-ui16nda.h \
+          liboctave/operators/mx-i16-i32nda.h \
+          liboctave/operators/mx-i16-ui32nda.h \
+          liboctave/operators/mx-i16-i64nda.h \
+          liboctave/operators/mx-i16-ui64nda.h \
+          liboctave/operators/mx-i32-i8nda.h \
+          liboctave/operators/mx-i32-ui8nda.h \
+          liboctave/operators/mx-i32-i16nda.h \
+          liboctave/operators/mx-i32-ui16nda.h \
+          liboctave/operators/mx-i32-ui32nda.h \
+          liboctave/operators/mx-i32-i64nda.h \
+          liboctave/operators/mx-i32-ui64nda.h \
+          liboctave/operators/mx-i64-i8nda.h \
+          liboctave/operators/mx-i64-ui8nda.h \
+          liboctave/operators/mx-i64-i16nda.h \
+          liboctave/operators/mx-i64-ui16nda.h \
+          liboctave/operators/mx-i64-i32nda.h \
+          liboctave/operators/mx-i64-ui32nda.h \
+          liboctave/operators/mx-i64-ui64nda.h \
+          liboctave/operators/mx-ui8-i8nda.h \
+          liboctave/operators/mx-ui8-i16nda.h \
+          liboctave/operators/mx-ui8-ui16nda.h \
+          liboctave/operators/mx-ui8-i32nda.h \
+          liboctave/operators/mx-ui8-ui32nda.h \
+          liboctave/operators/mx-ui8-i64nda.h \
+          liboctave/operators/mx-ui8-ui64nda.h \
+          liboctave/operators/mx-ui16-i8nda.h \
+          liboctave/operators/mx-ui16-ui8nda.h \
+          liboctave/operators/mx-ui16-i16nda.h \
+          liboctave/operators/mx-ui16-i32nda.h \
+          liboctave/operators/mx-ui16-ui32nda.h \
+          liboctave/operators/mx-ui16-i64nda.h \
+          liboctave/operators/mx-ui16-ui64nda.h \
+          liboctave/operators/mx-ui32-i8nda.h \
+          liboctave/operators/mx-ui32-ui8nda.h \
+          liboctave/operators/mx-ui32-i16nda.h \
+          liboctave/operators/mx-ui32-ui16nda.h \
+          liboctave/operators/mx-ui32-i32nda.h \
+          liboctave/operators/mx-ui32-i64nda.h \
+          liboctave/operators/mx-ui32-ui64nda.h \
+          liboctave/operators/mx-ui64-i8nda.h \
+          liboctave/operators/mx-ui64-ui8nda.h \
+          liboctave/operators/mx-ui64-i16nda.h \
+          liboctave/operators/mx-ui64-ui16nda.h \
+          liboctave/operators/mx-ui64-i32nda.h \
+          liboctave/operators/mx-ui64-ui32nda.h \
+          liboctave/operators/mx-ui64-i64nda.h \
+          liboctave/operators/mx-i8nda-ui8nda.h \
+          liboctave/operators/mx-i8nda-i16nda.h \
+          liboctave/operators/mx-i8nda-ui16nda.h \
+          liboctave/operators/mx-i8nda-i32nda.h \
+          liboctave/operators/mx-i8nda-ui32nda.h \
+          liboctave/operators/mx-i8nda-i64nda.h \
+          liboctave/operators/mx-i8nda-ui64nda.h \
+          liboctave/operators/mx-i16nda-i8nda.h \
+          liboctave/operators/mx-i16nda-ui8nda.h \
+          liboctave/operators/mx-i16nda-ui16nda.h \
+          liboctave/operators/mx-i16nda-i32nda.h \
+          liboctave/operators/mx-i16nda-ui32nda.h \
+          liboctave/operators/mx-i16nda-i64nda.h \
+          liboctave/operators/mx-i16nda-ui64nda.h \
+          liboctave/operators/mx-i32nda-i8nda.h \
+          liboctave/operators/mx-i32nda-ui8nda.h \
+          liboctave/operators/mx-i32nda-i16nda.h \
+          liboctave/operators/mx-i32nda-ui16nda.h \
+          liboctave/operators/mx-i32nda-ui32nda.h \
+          liboctave/operators/mx-i32nda-i64nda.h \
+          liboctave/operators/mx-i32nda-ui64nda.h \
+          liboctave/operators/mx-i64nda-i8nda.h \
+          liboctave/operators/mx-i64nda-ui8nda.h \
+          liboctave/operators/mx-i64nda-i16nda.h \
+          liboctave/operators/mx-i64nda-ui16nda.h \
+          liboctave/operators/mx-i64nda-i32nda.h \
+          liboctave/operators/mx-i64nda-ui32nda.h \
+          liboctave/operators/mx-i64nda-ui64nda.h \
+          liboctave/operators/mx-ui8nda-i8nda.h \
+          liboctave/operators/mx-ui8nda-i16nda.h \
+          liboctave/operators/mx-ui8nda-ui16nda.h \
+          liboctave/operators/mx-ui8nda-i32nda.h \
+          liboctave/operators/mx-ui8nda-ui32nda.h \
+          liboctave/operators/mx-ui8nda-i64nda.h \
+          liboctave/operators/mx-ui8nda-ui64nda.h \
+          liboctave/operators/mx-ui16nda-i8nda.h \
+          liboctave/operators/mx-ui16nda-ui8nda.h \
+          liboctave/operators/mx-ui16nda-i16nda.h \
+          liboctave/operators/mx-ui16nda-i32nda.h \
+          liboctave/operators/mx-ui16nda-ui32nda.h \
+          liboctave/operators/mx-ui16nda-i64nda.h \
+          liboctave/operators/mx-ui16nda-ui64nda.h \
+          liboctave/operators/mx-ui32nda-i8nda.h \
+          liboctave/operators/mx-ui32nda-ui8nda.h \
+          liboctave/operators/mx-ui32nda-i16nda.h \
+          liboctave/operators/mx-ui32nda-ui16nda.h \
+          liboctave/operators/mx-ui32nda-i32nda.h \
+          liboctave/operators/mx-ui32nda-i64nda.h \
+          liboctave/operators/mx-ui32nda-ui64nda.h \
+          liboctave/operators/mx-ui64nda-i8nda.h \
+          liboctave/operators/mx-ui64nda-ui8nda.h \
+          liboctave/operators/mx-ui64nda-i16nda.h \
+          liboctave/operators/mx-ui64nda-ui16nda.h \
+          liboctave/operators/mx-ui64nda-i32nda.h \
+          liboctave/operators/mx-ui64nda-ui32nda.h \
+          liboctave/operators/mx-ui64nda-i64nda.h \
+          liboctave/version.h \
+          liboctave/operators/smx-sm-cs.h liboctave/operators/smx-cs-sm.h liboctave/operators/smx-scm-s.h liboctave/operators/smx-s-scm.h liboctave/operators/smx-scm-sm.h liboctave/operators/smx-sm-scm.h liboctave/operators/smx-m-sm.h liboctave/operators/smx-m-scm.h liboctave/operators/smx-cm-sm.h liboctave/operators/smx-cm-scm.h liboctave/operators/smx-sm-m.h liboctave/operators/smx-scm-m.h liboctave/operators/smx-sm-cm.h liboctave/operators/smx-scm-cm.h liboctave/operators/smx-bm-sbm.h liboctave/operators/smx-sbm-bm.h \
+          liboctave/operators/vx-ccv-cv.h liboctave/operators/vx-ccv-s.h liboctave/operators/vx-crv-rv.h liboctave/operators/vx-crv-s.h liboctave/operators/vx-cs-cv.h liboctave/operators/vx-cs-rv.h liboctave/operators/vx-cv-ccv.h liboctave/operators/vx-cv-cs.h liboctave/operators/vx-rv-crv.h liboctave/operators/vx-rv-cs.h liboctave/operators/vx-s-ccv.h liboctave/operators/vx-s-crv.h liboctave/operators/vx-fccv-fcv.h liboctave/operators/vx-fccv-fs.h liboctave/operators/vx-fcrv-frv.h liboctave/operators/vx-fcrv-fs.h liboctave/operators/vx-fcs-fcv.h liboctave/operators/vx-fcs-frv.h liboctave/operators/vx-fcv-fccv.h liboctave/operators/vx-fcv-fcs.h liboctave/operators/vx-frv-fcrv.h liboctave/operators/vx-frv-fcs.h liboctave/operators/vx-fs-fccv.h liboctave/operators/vx-fs-fcrv.h \
+          || echo "::warning title=OctaveConfigFailure::Failed to build header file"
           make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
-
-# make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
