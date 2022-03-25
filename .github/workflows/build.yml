@@ -128,6 +128,7 @@ jobs:
             --enable-link-all-dependencies \
             --enable-shared \
             --disable-static \
+            --without-qt \
             --with-x=no \
             --with-portaudio \
             --with-sndfile \
@@ -137,12 +138,12 @@ jobs:
             --with-blas="-L$BREWPFX/opt/openblas -lopenblas" \
             --with-qhull-includedir=$BREWPFX/include \
             --with-qhull-libdir=$BREWPFX/lib \
-            CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include" \
-            LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
-            PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
-            QT_CPPFLAGS=-I$BREWPFX/opt/qt/include \
+            CPPFLAGS="$CPPFLAGS -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/include" \
+            LDFLAGS="$LDFLAGS -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib" \
+            PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/libexec/bin:$BREWPFX/bin \
             F77=$BREWPFX/bin/gfortran-11 \
-            QT_LDFLAGS=-L$BREWPFX/opt/qt/lib \
+            CC=$BREWPFX/bin/gcc-11 \
+            CXX=$BREWPFX/bin/g++-11 \
             || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
         env:
           QCOLLECTIONGENERATOR: qhelpgenerator
@@ -151,12 +152,12 @@ jobs:
         if: false
         run: |
           export BREWPFX=`brew --prefix`
-          export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
-          export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
-          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-          export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
+          export CPPFLAGS="$CPPFLAGS -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include"
+          export LDFLAGS="$LDFLAGS -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
+          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:$BREWPFX/opt/bison/bin:$BREWPFX/opt/texinfo/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
           export F77=$BREWPFX/bin/gfortran-11
-          export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
+          export CC=$BREWPFX/bin/gcc-11
+          export CXX=$BREWPFX/bin/g++-11
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
           make octave-config.h || echo "::warning title=OctaveConfigFailure::Failed to build octave-config.h"
           make -j2 all || echo "::warning title=BuildFailure::Build Failed"
