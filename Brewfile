@@ -4,7 +4,7 @@ brew 'automake'
 brew 'texinfo'
 # brew 'gnuplot' # this is a runtime dependency, and installs slowly on Github Actions
 brew 'hdf5'
-# brew 'qt@5'
+# brew 'qt@5' # Building without QT on MacOS
 brew 'curl'
 brew 'xz'
 brew 'icoutils'
@@ -30,5 +30,5 @@ brew 'fontconfig'
 brew 'libsndfile'
 brew 'libtool'
 brew 'portaudio'
-# brew 'qscintilla2'
+# brew 'qscintilla2' # QT text editor component - building without QT on MacOS
 brew 'sundials'
