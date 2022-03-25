@@ -84,11 +84,12 @@ jobs:
             !/usr/local/lib/python3.10/**
             /usr/local/libexec
             /usr/local/include
-            ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-cachev2-${{ hashFiles('Brewfile') }}
+            # These caches are quite large - omitting
+            # ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-cachev3-${{ hashFiles('Brewfile') }}
           restore-keys: |
-            ${{ runner.os }}-cachev2-
-            ${{ runner.os }}-cachev2-${{ hashFiles('Brewfile') }}
+            ${{ runner.os }}-cachev3-
+            ${{ runner.os }}-cachev3-${{ hashFiles('Brewfile') }}
 
       - name: Cache Octave Download
         id: cache-octave-download
