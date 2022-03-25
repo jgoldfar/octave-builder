@@ -61,10 +61,10 @@ jobs:
           cache-name: octave-download
         with:
           path: |
-            octave-$OCTAVE_VERSION.tar.xz
-            $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+            octave-*.tar.gz
+            octave-*/**
           key:
-            octave-download-cachev1-${{ env.OCTAVE_VERSION }}
+            octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
       - name: Install dependencies (MacOS)
         run: |
