@@ -453,6 +453,11 @@ jobs:
           liboctave/version.h \
           liboctave/operators/smx-sm-cs.h liboctave/operators/smx-cs-sm.h liboctave/operators/smx-scm-s.h liboctave/operators/smx-s-scm.h liboctave/operators/smx-scm-sm.h liboctave/operators/smx-sm-scm.h liboctave/operators/smx-m-sm.h liboctave/operators/smx-m-scm.h liboctave/operators/smx-cm-sm.h liboctave/operators/smx-cm-scm.h liboctave/operators/smx-sm-m.h liboctave/operators/smx-scm-m.h liboctave/operators/smx-sm-cm.h liboctave/operators/smx-scm-cm.h liboctave/operators/smx-bm-sbm.h liboctave/operators/smx-sbm-bm.h \
           liboctave/operators/vx-ccv-cv.h liboctave/operators/vx-ccv-s.h liboctave/operators/vx-crv-rv.h liboctave/operators/vx-crv-s.h liboctave/operators/vx-cs-cv.h liboctave/operators/vx-cs-rv.h liboctave/operators/vx-cv-ccv.h liboctave/operators/vx-cv-cs.h liboctave/operators/vx-rv-crv.h liboctave/operators/vx-rv-cs.h liboctave/operators/vx-s-ccv.h liboctave/operators/vx-s-crv.h liboctave/operators/vx-fccv-fcv.h liboctave/operators/vx-fccv-fs.h liboctave/operators/vx-fcrv-frv.h liboctave/operators/vx-fcrv-fs.h liboctave/operators/vx-fcs-fcv.h liboctave/operators/vx-fcs-frv.h liboctave/operators/vx-fcv-fccv.h liboctave/operators/vx-fcv-fcs.h liboctave/operators/vx-frv-fcrv.h liboctave/operators/vx-frv-fcs.h liboctave/operators/vx-fs-fccv.h liboctave/operators/vx-fs-fcrv.h \
+          liboctave/numeric/DASPK-opts.h \
+          liboctave/numeric/DASRT-opts.h \
+          liboctave/numeric/DASSL-opts.h \
+          liboctave/numeric/LSODE-opts.h \
+          liboctave/numeric/Quad-opts.h \
           || echo "::warning title=OctaveConfigFailure::Failed to build mx-ops.h or associated file"
           make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
 
@@ -497,7 +502,7 @@ jobs:
           CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
 
       # Why aren't the necessary header files being generated? Not clear...
-      # Grabbed these from the Makefile SMX_OP_INC, VX_OP_INC, MX_OP_INC
+      # Grabbed these from the Makefile SMX_OP_INC, VX_OP_INC, MX_OP_INC, LIBOCTAVE_OPT_INC
       - name: Build Octave
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
@@ -835,5 +840,10 @@ jobs:
           liboctave/version.h \
           liboctave/operators/smx-sm-cs.h liboctave/operators/smx-cs-sm.h liboctave/operators/smx-scm-s.h liboctave/operators/smx-s-scm.h liboctave/operators/smx-scm-sm.h liboctave/operators/smx-sm-scm.h liboctave/operators/smx-m-sm.h liboctave/operators/smx-m-scm.h liboctave/operators/smx-cm-sm.h liboctave/operators/smx-cm-scm.h liboctave/operators/smx-sm-m.h liboctave/operators/smx-scm-m.h liboctave/operators/smx-sm-cm.h liboctave/operators/smx-scm-cm.h liboctave/operators/smx-bm-sbm.h liboctave/operators/smx-sbm-bm.h \
           liboctave/operators/vx-ccv-cv.h liboctave/operators/vx-ccv-s.h liboctave/operators/vx-crv-rv.h liboctave/operators/vx-crv-s.h liboctave/operators/vx-cs-cv.h liboctave/operators/vx-cs-rv.h liboctave/operators/vx-cv-ccv.h liboctave/operators/vx-cv-cs.h liboctave/operators/vx-rv-crv.h liboctave/operators/vx-rv-cs.h liboctave/operators/vx-s-ccv.h liboctave/operators/vx-s-crv.h liboctave/operators/vx-fccv-fcv.h liboctave/operators/vx-fccv-fs.h liboctave/operators/vx-fcrv-frv.h liboctave/operators/vx-fcrv-fs.h liboctave/operators/vx-fcs-fcv.h liboctave/operators/vx-fcs-frv.h liboctave/operators/vx-fcv-fccv.h liboctave/operators/vx-fcv-fcs.h liboctave/operators/vx-frv-fcrv.h liboctave/operators/vx-frv-fcs.h liboctave/operators/vx-fs-fccv.h liboctave/operators/vx-fs-fcrv.h \
+          liboctave/numeric/DASPK-opts.h \
+          liboctave/numeric/DASRT-opts.h \
+          liboctave/numeric/DASSL-opts.h \
+          liboctave/numeric/LSODE-opts.h \
+          liboctave/numeric/Quad-opts.h \
           || echo "::warning title=OctaveConfigFailure::Failed to build header file"
           make -j2 all-local || echo "::warning title=BuildFailure::Build Failed"
