@@ -117,7 +117,7 @@ jobs:
           tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-        if: !always()
+        if: false
         run: |
           export BREWPFX=`brew --prefix`
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
@@ -148,7 +148,7 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
 
       - name: Build Octave
-        if: !always()
+        if: false
         run: |
           export BREWPFX=`brew --prefix`
           export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
@@ -164,7 +164,7 @@ jobs:
   build-ubuntu:
     runs-on: 'ubuntu-20.04'
     name: Build on Ubuntu
-    if: !always()
+    if: false
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
