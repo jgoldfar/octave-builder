@@ -13,16 +13,27 @@ env:
 
 jobs:
   build-macos:
-    runs-on: 'macos-latest'
+    runs-on: 'macos-10.15'
     name: Build on MacOS
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
         uses: actions/checkout@v2
 
+      # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
+      - name: Cache Homebrew Packages
+        id: cache-homebrew-packages
+        uses: actions/cache@v3
+        env:
+          cache-name: homebrew-packages
+        with:
+          path: $(brew --prefix)
+          key: macos-10.15-${{ hashFiles('Brewfile') }}
+
       - name: Install dependencies (MacOS)
         run: |
-          brew install autoconf automake texinfo gnuplot hdf5 qt@5 curl xz icoutils glpk bison pcre2 qrupdate qhull readline fftw fltk gl2ps suite-sparse openblas gawk gnu-sed arpack ghostscript freetype fontconfig gcc gfortran libsndfile libtool portaudio qscintilla2 sundials
+          brew update
+          brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
 
       # https://www.gnu.org/software/octave/
       - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
@@ -37,15 +48,18 @@ jobs:
           export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
           export PATH=$GITHUB_WORKSPACE/usr/bin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin:/bin:/sbin:/usr/bin:/usr/sbin
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          ./bootstrap
           ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas"
         env:
           QCOLLECTIONGENERATOR: qhelpgenerator
           QT_CPPFLAGS: -I/usr/local/opt/qt/include
           QT_LDFLAGS: -L/usr/local/opt/qt/lib
 
+      - name: Build Octave
+        run: |
+          make -j2 || echo "::warning title=BuildFailure::Build Failed"
+
   build-ubuntu:
-    runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-20.04'
     name: Build on Ubuntu
     steps:
       # https://github.com/actions/checkout
@@ -73,4 +87,4 @@ jobs:
       - name: Build Octave
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          make -j
+          make -j2 || echo "::warning title=BuildFailure::Build Failed"
