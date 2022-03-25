@@ -108,45 +108,58 @@ jobs:
         env:
           QCOLLECTIONGENERATOR: qhelpgenerator
 
-      # - name: Build Octave
-      #   run: |
-      #     export BREWPFX=`brew --prefix`
-      #     export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/lib"
-      #     export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
-      #     export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-      #     export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
-      #     export F77=$BREWPFX/bin/gfortran-11
-      #     export FC=$BREWPFX/bin/gfortran-11
-      #     export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
-      #     make -j2 install || echo "::warning title=BuildFailure::Build Failed"
+      - name: Build Octave
+        run: |
+          export BREWPFX=`brew --prefix`
+          export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/texinfo/lib"
+          export LDFLAGS="$LDFLAGS -L$BREWPFX/opt/qt/lib -L$BREWPFX/lib -L$BREWPFX/opt/readline/lib -L$BREWPFX/opt/bison/lib -L$BREWPFX/opt/texinfo/lib"
+          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+          export QT_CPPFLAGS=-I$BREWPFX/opt/qt/include
+          export F77=$BREWPFX/bin/gfortran-11
+          export FC=$BREWPFX/bin/gfortran-11
+          export QT_LDFLAGS=-L$BREWPFX/opt/qt/lib
+          make -j2 install || echo "::warning title=BuildFailure::Build Failed"
 
-  # build-ubuntu:
-  #   runs-on: 'ubuntu-20.04'
-  #   name: Build on Ubuntu
-  #   steps:
-  #     # https://github.com/actions/checkout
-  #     - name: Checkout the commit triggering this job
-  #       uses: actions/checkout@v2
+  build-ubuntu:
+    runs-on: 'ubuntu-20.04'
+    name: Build on Ubuntu
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout the commit triggering this job
+        uses: actions/checkout@v2
 
-  #     # https://wiki.octave.org/Octave_for_Debian_systems#The_right_way
-  #     # https://github.com/actions/virtual-environments/issues/2924
-  #     - name: Install dependencies (Ubuntu)
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y gcc g++ gfortran make libblas-dev liblapack-dev libpcre3-dev libarpack2-dev libcurl4-gnutls-dev epstool libfftw3-dev fig2dev libfltk1.3-dev libfontconfig1-dev libfreetype6-dev libgl2ps-dev libglpk-dev libreadline-dev gnuplot-x11 libgraphicsmagick++1-dev libhdf5-dev openjdk-11-jdk libsndfile1-dev llvm-dev texinfo libgl1-mesa-dev pstoedit portaudio19-dev libqhull-dev libqrupdate-dev libsuitesparse-dev texlive-latex-extra libxft-dev zlib1g-dev autoconf automake bison flex gperf gzip icoutils librsvg2-bin libtool perl rsync tar qtbase5-dev qttools5-dev qttools5-dev-tools libqscintilla2-qt5-dev libsundials-dev
+      # https://wiki.octave.org/Octave_for_Debian_systems#The_right_way
+      # https://github.com/actions/virtual-environments/issues/2924
+      - name: Install dependencies (Ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ gfortran make libblas-dev liblapack-dev libpcre3-dev libarpack2-dev libcurl4-gnutls-dev epstool libfftw3-dev fig2dev libfltk1.3-dev libfontconfig1-dev libfreetype6-dev libgl2ps-dev libglpk-dev libreadline-dev gnuplot-x11 libgraphicsmagick++1-dev libhdf5-dev openjdk-11-jdk libsndfile1-dev llvm-dev texinfo libgl1-mesa-dev pstoedit portaudio19-dev libqhull-dev libqrupdate-dev libsuitesparse-dev texlive-latex-extra libxft-dev zlib1g-dev autoconf automake bison flex gperf gzip icoutils librsvg2-bin libtool perl rsync tar qtbase5-dev qttools5-dev qttools5-dev-tools libqscintilla2-qt5-dev libsundials-dev
 
-  #     # https://www.gnu.org/software/octave/
-  #     - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-  #       run: |
-  #         curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-  #         tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+      - name: Cache Octave Download
+        id: cache-octave-download
+        uses: actions/cache@v3
+        env:
+          cache-name: octave-download
+        with:
+          path: |
+            octave-*.tar.gz
+            octave-*/**
+          key:
+            octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
-  #     - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-  #       run: |
-  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-  #         ./configure --prefix=$GITHUB_WORKSPACE/usr
+      # https://www.gnu.org/software/octave/
+      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+        if: steps.cache-octave-download.outputs.cache-hit != 'true'
+        run: |
+          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+          tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
-  #     - name: Build Octave
-  #       run: |
-  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-  #         make -j2 || echo "::warning title=BuildFailure::Build Failed"
+      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+        run: |
+          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+          ./configure --prefix=$GITHUB_WORKSPACE/usr
+
+      - name: Build Octave
+        run: |
+          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+          make -j2 || echo "::warning title=BuildFailure::Build Failed"
