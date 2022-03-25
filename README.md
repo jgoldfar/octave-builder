@@ -7,3 +7,5 @@ Octave is a free mathematical programming environment with a syntax nearly ident
 
 For more information on Octave, see the Octave web site,
 [https://www.gnu.org/software/octave/](https://www.gnu.org/software/octave/).
+
+The build is automated using Github Actions - see [`.github/workflows`](./.github/workflows) for details.

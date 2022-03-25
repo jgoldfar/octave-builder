@@ -28,7 +28,7 @@ jobs:
           cache-name: homebrew-packages
         with:
           path: $(brew --prefix)
-          key: macos-10.15-${{ hashFiles('Brewfile') }}
+          key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
 
       - name: Install dependencies (MacOS)
         run: |
@@ -47,6 +47,7 @@ jobs:
           export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/qt/include"
           export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
           export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+          env
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
           autoreconf -i -f
           ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas" || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
@@ -54,8 +55,8 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
           QT_CPPFLAGS: -I/usr/local/opt/qt/include
           QT_LDFLAGS: -L/usr/local/opt/qt/lib
-          F77: gfortran
-          FC: gfortran
+          F77: /usr/local/bin/gfortran
+          FC: /usr/local/bin/gfortran
           # CC: /usr/local/bin/gcc
 
       - name: Build Octave
