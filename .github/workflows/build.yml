@@ -1,0 +1,40 @@
+name: Build Octave
+
+on:
+  push:
+    branches:
+      - '*'
+  schedule:
+    - cron: '30 5 * * 3'
+
+env:
+  OCTAVE_VERSION: 6.4.0
+  ARCH: x86_64
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os_version }}
+    strategy:
+      matrix:
+        os_version: ['ubuntu-latest', 'macos-latest']
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout the commit triggering this job
+        uses: actions/checkout@v2
+
+      - name: Install dependencies (MacOS)
+        if: contains(matrix.platform, 'macos')
+        run: |
+          brew install autoconf automake texinfo gnuplot hdf5 qt curlxz icoutils glpk bison pcre2 qrupdate qhull readline fftw gl2ps suite-sparse openblas gawk gnu-sed
+
+      - name: Install dependencies (Ubuntu)
+        if: contains(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get install -y autoconf automake texinfo gnuplot libhdf5-dev qtbase5-dev curl xz-utils icoutils libglpk-dev bison libpcre2-dev libqrupdate-dev libqhull-dev libreadline-dev fftw-dev libgl2ps-dev libsuitesparse-dev libopenblas-dev gawk sed
+
+      # https://www.gnu.org/software/octave/
+      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+        run: |
+          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+          tar -xvzf --directory $(pwd)
+          ls -l
