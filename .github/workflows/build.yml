@@ -40,11 +40,14 @@ jobs:
           # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
           # ~/Library/Caches/Homebrew - user-specific Homebrew caches
           path: |
+            # Exclude all git directories
             **/.git/**
             /usr/local/Homebrew
+            # Exclude vendored packages and taps from cache
             !/usr/local/Homebrew/Library/Taps/**
             !/usr/local/Homebrew/Library/Homebrew/vendor/**
             /usr/local/Cellar
+            # Exclude system-provided packages
             !/usr/local/Cellar/tcl-tk/**
             !/usr/local/Cellar/libpq/**
             !/usr/local/Cellar/aspell/**
@@ -67,8 +70,10 @@ jobs:
             /usr/local/Frameworks
             /usr/local/bin
             /usr/local/opt
+            # Files for the github runner
             !/usr/local/opt/runner/**
             /usr/local/lib
+            # System-installed packages
             !/usr/local/lib/ruby/**
             !/usr/local/lib/httpd/**
             !/usr/local/lib/tk8.6/**
@@ -98,6 +103,7 @@ jobs:
             octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
       - name: Install dependencies (MacOS)
+        # if: steps.cache-homebrew-packages.output.cache-hit != 'true'
         run: |
           brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
         env:
@@ -111,6 +117,7 @@ jobs:
           tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+        if: !always()
         run: |
           export BREWPFX=`brew --prefix`
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
@@ -141,6 +148,7 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
 
       - name: Build Octave
+        if: !always()
         run: |
           export BREWPFX=`brew --prefix`
           export CPPFLAGS="$CPPFLAGS -I$BREWPFX/opt/qt/include -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION"
@@ -156,6 +164,7 @@ jobs:
   build-ubuntu:
     runs-on: 'ubuntu-20.04'
     name: Build on Ubuntu
+    if: !always()
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
