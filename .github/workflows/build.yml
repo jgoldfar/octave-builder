@@ -93,8 +93,8 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
           QT_CPPFLAGS: -I/usr/local/opt/qt/include
           QT_LDFLAGS: -L/usr/local/opt/qt/lib
-          F77: /usr/local/bin/gfortran
-          FC: /usr/local/bin/gfortran
+          F77: /usr/local/bin/gfortran-11
+          FC: /usr/local/bin/gfortran-11
           # CC: /usr/local/bin/gcc
 
       - name: Build Octave
