@@ -20,48 +20,76 @@ jobs:
       - name: Checkout the commit triggering this job
         uses: actions/checkout@v2
 
-      # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
+      - name: Update Homebrew
+        run: |
+          brew update --preinstall
+          cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/foo.rb" > .github/brew-formulae
+          echo "::notice title=BrewPrefix::$(brew --prefix)"
+          echo "::notice title=BrewCache::$(brew --cache)"
+          cat .github/brew-formulae
+
+        # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
       - name: Cache Homebrew Packages
         id: cache-homebrew-packages
         uses: actions/cache@v3
         env:
           cache-name: homebrew-packages
         with:
-          path: $(brew --prefix)
-          key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile') }}
+          # Paths to cache:
+          # /usr/local/Homebrew - installation folder of Homebrew
+          # /usr/local/Cellar - installation folder of Homebrew formulae
+          # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
+          # /usr/local/lib/python3.8 - Python3 packages installation
+          path: |
+            $(brew --prefix)/Homebrew
+            $(brew --prefix)/Cellar
+            $(brew --prefix)/Frameworks
+            $(brew --prefix)/bin
+            $(brew --prefix)/opt
+            $(brew --prefix)/lib
+            $(brew --prefix)/libexec
+            $(brew --prefix)/include
+            $(brew --cache)
+          key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile', '.github/brew-formulae') }}
+          restore-keys: |
+            ${{ runner.os }}-cachev1-
+            ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile', '.github/brew-formulae') }}
+
+
 
       - name: Install dependencies (MacOS)
         run: |
-          brew update
           brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
-
-      # https://www.gnu.org/software/octave/
-      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-        run: |
-          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-          tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
-
-      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-        run: |
-          export BREWPFX=`brew --prefix`
-          export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/qt/include"
-          export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
-          export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
-          env
-          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          autoreconf -i -f
-          ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas" || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
         env:
-          QCOLLECTIONGENERATOR: qhelpgenerator
-          QT_CPPFLAGS: -I/usr/local/opt/qt/include
-          QT_LDFLAGS: -L/usr/local/opt/qt/lib
-          F77: /usr/local/bin/gfortran
-          FC: /usr/local/bin/gfortran
-          # CC: /usr/local/bin/gcc
+          HOMEBREW_NO_AUTO_UPDATE: 1
 
-      - name: Build Octave
-        run: |
-          make -j2 || echo "::warning title=BuildFailure::Build Failed"
+      #   # https://www.gnu.org/software/octave/
+      # - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+      #   run: |
+      #     curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+      #     tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+
+      # - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+      #   run: |
+      #     export BREWPFX=`brew --prefix`
+      #     export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/qt/include"
+      #     export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
+      #     export PATH=$GITHUB_WORKSPACE/usr/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin
+      #     env
+      #     cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+      #     autoreconf -i -f
+      #     ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas" || (cat config.log ; echo "::warning title=ConfigureFailure::Configure Failed")
+      #   env:
+      #     QCOLLECTIONGENERATOR: qhelpgenerator
+      #     QT_CPPFLAGS: -I/usr/local/opt/qt/include
+      #     QT_LDFLAGS: -L/usr/local/opt/qt/lib
+      #     F77: /usr/local/bin/gfortran
+      #     FC: /usr/local/bin/gfortran
+      #     # CC: /usr/local/bin/gcc
+
+      # - name: Build Octave
+      #   run: |
+      #     make -j2 || echo "::warning title=BuildFailure::Build Failed"
 
   # build-ubuntu:
   #   runs-on: 'ubuntu-20.04'
