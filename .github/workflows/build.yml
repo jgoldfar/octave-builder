@@ -12,7 +12,8 @@ env:
   ARCH: x86_64
 
 jobs:
-  build:
+  build-macos:
+    name: Build on MacOS
     runs-on: 'macos-latest'
     steps:
       # https://github.com/actions/checkout
@@ -21,7 +22,7 @@ jobs:
 
       - name: Install dependencies (MacOS)
         run: |
-          brew install autoconf automake texinfo gnuplot hdf5 qt curlxz icoutils glpk bison pcre2 qrupdate qhull readline fftw gl2ps suite-sparse openblas gawk gnu-sed
+          brew install autoconf automake texinfo gnuplot hdf5 qt curl xz icoutils glpk bison pcre2 qrupdate qhull readline fftw gl2ps suite-sparse openblas gawk gnu-sed
 
       # https://www.gnu.org/software/octave/
       - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
@@ -38,6 +39,7 @@ jobs:
 
   # build-ubuntu:
   #   runs-on: 'ubuntu-latest'
+  #   name: Build on Ubuntu
   #   steps:
   #     # https://github.com/actions/checkout
   #     - name: Checkout the commit triggering this job
