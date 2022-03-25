@@ -36,5 +36,5 @@ jobs:
       - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
         run: |
           curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-          tar -xvzf --directory $(pwd)
+          tar -xvzf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
           ls -l
