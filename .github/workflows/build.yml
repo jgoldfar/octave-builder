@@ -37,4 +37,8 @@ jobs:
         run: |
           curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
           tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
-          ls -l
+
+      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+        run: |
+          cd octave-$OCTAVE_VERSION
+          ./configure --prefix=$GITHIB_WORKSPACE/usr
