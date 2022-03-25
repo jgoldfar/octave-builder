@@ -48,12 +48,12 @@ jobs:
           export LDFLAGS="$LDFLAGS -L/usr/local/opt/qt/lib"
           export PATH=$GITHUB_WORKSPACE/usr/bin:/usr/local/opt/bison/bin:/usr/local/opt/texinfo/bin:/usr/local/opt/qt/bin:$BREWPFX/libexec/bin:$BREWPFX/bin:/bin:/sbin:/usr/bin:/usr/sbin
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          ./configure --help
           ./configure --prefix=$GITHUB_WORKSPACE/usr --disable-dependency-tracking --disable-silent-rules --enable-link-all-dependencies --enable-shared --disable-static --with-x=no --with-portaudio --with-sndfile --with-hdf5-includedir=$BREWPFX/include --with-hdf5-libdir=$BREWPFX/lib --with-java-homedir=$BREWPFX/opt/openjdk --with-blas="-L$BREWPFX/opt/openblas -lopenblas" || echo "::warning title=ConfigureFailure::Configure Failed"
         env:
           QCOLLECTIONGENERATOR: qhelpgenerator
           QT_CPPFLAGS: -I/usr/local/opt/qt/include
           QT_LDFLAGS: -L/usr/local/opt/qt/lib
+          F77: /usr/local/bin/gfortran
 
       - name: Build Octave
         run: |
