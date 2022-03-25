@@ -2,7 +2,7 @@
 brew 'autoconf'
 brew 'automake'
 brew 'texinfo'
-brew 'gnuplot'
+# brew 'gnuplot' # this is a runtime dependency, and installs slowly on Github Actions
 brew 'hdf5'
 # brew 'qt@5'
 brew 'curl'
