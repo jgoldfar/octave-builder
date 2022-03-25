@@ -34,6 +34,8 @@ jobs:
         env:
           cache-name: homebrew-packages
         with:
+          # Roughly 20% of the total cache size
+          upload-chunk-size: 630000000
           # Paths to cache:
           # /usr/local/Homebrew - installation folder of Homebrew
           # /usr/local/Cellar - installation folder of Homebrew formulae
@@ -104,7 +106,7 @@ jobs:
             octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
       - name: Install dependencies (MacOS)
-        if: steps.cache-homebrew-packages.output.cache-hit != 'true'
+        # if: steps.cache-homebrew-packages.output.cache-hit != 'true'
         run: |
           brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
         env:
@@ -112,12 +114,13 @@ jobs:
 
         # https://www.gnu.org/software/octave/
       - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-        if: steps.cache-octave-download.outputs.cache-hit != 'true'
+        if: false && steps.cache-octave-download.outputs.cache-hit != 'true'
         run: |
           curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
           tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+        if: false
         run: |
           export BREWPFX=`brew --prefix`
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
@@ -149,6 +152,7 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
 
       - name: Build Octave
+        if: false
         run: |
           export BREWPFX=`brew --prefix`
           export CPPFLAGS="$CPPFLAGS -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include"
