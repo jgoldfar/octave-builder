@@ -104,7 +104,7 @@ jobs:
             octave-download-cachev2-${{ env.OCTAVE_VERSION }}
 
       - name: Install dependencies (MacOS)
-        # if: steps.cache-homebrew-packages.output.cache-hit != 'true'
+        if: steps.cache-homebrew-packages.output.cache-hit != 'true'
         run: |
           brew bundle --file="$GITHUB_WORKSPACE/Brewfile"
         env:
@@ -118,7 +118,6 @@ jobs:
           tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-        if: false
         run: |
           export BREWPFX=`brew --prefix`
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
@@ -150,7 +149,6 @@ jobs:
           QCOLLECTIONGENERATOR: qhelpgenerator
 
       - name: Build Octave
-        if: false
         run: |
           export BREWPFX=`brew --prefix`
           export CPPFLAGS="$CPPFLAGS -I$BREWPFX/include -I$BREWPFX/opt/readline/include -I$BREWPFX/opt/bison/include -I$BREWPFX/opt/texinfo/include"
@@ -201,8 +199,7 @@ jobs:
       - name: Configure Octave ${{ env.OCTAVE_VERSION }}
         run: |
           cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          ./configure --prefix=$GITHUB_WORKSPACE/usr \
-          CPPFLAGS="$CPPFLAGS -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION -I$GITHUB_WORKSPACE/octave-$OCTAVE_VERSION/liboctave/operators"
+          ./configure --prefix=$GITHUB_WORKSPACE/usr
 
       # Why aren't the necessary header files being generated? Not clear...
       # Grabbed these from the Makefile SMX_OP_INC, VX_OP_INC, MX_OP_INC, LIBOCTAVE_OPT_INC
