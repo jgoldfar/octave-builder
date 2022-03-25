@@ -23,10 +23,8 @@ jobs:
       - name: Update Homebrew
         run: |
           brew update --preinstall
-          cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/foo.rb" > .github/brew-formulae
           echo "::notice title=BrewPrefix::$(brew --prefix)"
           echo "::notice title=BrewCache::$(brew --cache)"
-          cat .github/brew-formulae
 
         # THX https://github.com/jawang35/dotfiles/blob/master/.github/workflows/ci.yml#L16
       - name: Cache Homebrew Packages
@@ -39,17 +37,17 @@ jobs:
           # /usr/local/Homebrew - installation folder of Homebrew
           # /usr/local/Cellar - installation folder of Homebrew formulae
           # /usr/local/Frameworks, /usr/local/bin, /usr/local/opt - contain (links to) binaries installed by Homebrew formulae
-          # /usr/local/lib/python3.8 - Python3 packages installation
+          # ~/Library/Caches/Homebrew - user-specific Homebrew caches
           path: |
-            $(brew --prefix)/Homebrew
-            $(brew --prefix)/Cellar
-            $(brew --prefix)/Frameworks
-            $(brew --prefix)/bin
-            $(brew --prefix)/opt
-            $(brew --prefix)/lib
-            $(brew --prefix)/libexec
-            $(brew --prefix)/include
-            $(brew --cache)
+            /usr/local/Homebrew
+            /usr/local/Cellar
+            /usr/local/Frameworks
+            /usr/local/bin
+            /usr/local/opt
+            /usr/local/lib
+            /usr/local/libexec
+            /usr/local/include
+            ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-cachev1-${{ hashFiles('Brewfile', '.github/brew-formulae') }}
           restore-keys: |
             ${{ runner.os }}-cachev1-
