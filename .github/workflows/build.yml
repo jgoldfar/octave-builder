@@ -62,33 +62,33 @@ jobs:
         run: |
           make -j2 || echo "::warning title=BuildFailure::Build Failed"
 
-  build-ubuntu:
-    runs-on: 'ubuntu-20.04'
-    name: Build on Ubuntu
-    steps:
-      # https://github.com/actions/checkout
-      - name: Checkout the commit triggering this job
-        uses: actions/checkout@v2
+  # build-ubuntu:
+  #   runs-on: 'ubuntu-20.04'
+  #   name: Build on Ubuntu
+  #   steps:
+  #     # https://github.com/actions/checkout
+  #     - name: Checkout the commit triggering this job
+  #       uses: actions/checkout@v2
 
-      # https://wiki.octave.org/Octave_for_Debian_systems#The_right_way
-      # https://github.com/actions/virtual-environments/issues/2924
-      - name: Install dependencies (Ubuntu)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc g++ gfortran make libblas-dev liblapack-dev libpcre3-dev libarpack2-dev libcurl4-gnutls-dev epstool libfftw3-dev fig2dev libfltk1.3-dev libfontconfig1-dev libfreetype6-dev libgl2ps-dev libglpk-dev libreadline-dev gnuplot-x11 libgraphicsmagick++1-dev libhdf5-dev openjdk-11-jdk libsndfile1-dev llvm-dev texinfo libgl1-mesa-dev pstoedit portaudio19-dev libqhull-dev libqrupdate-dev libsuitesparse-dev texlive-latex-extra libxft-dev zlib1g-dev autoconf automake bison flex gperf gzip icoutils librsvg2-bin libtool perl rsync tar qtbase5-dev qttools5-dev qttools5-dev-tools libqscintilla2-qt5-dev libsundials-dev
+  #     # https://wiki.octave.org/Octave_for_Debian_systems#The_right_way
+  #     # https://github.com/actions/virtual-environments/issues/2924
+  #     - name: Install dependencies (Ubuntu)
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y gcc g++ gfortran make libblas-dev liblapack-dev libpcre3-dev libarpack2-dev libcurl4-gnutls-dev epstool libfftw3-dev fig2dev libfltk1.3-dev libfontconfig1-dev libfreetype6-dev libgl2ps-dev libglpk-dev libreadline-dev gnuplot-x11 libgraphicsmagick++1-dev libhdf5-dev openjdk-11-jdk libsndfile1-dev llvm-dev texinfo libgl1-mesa-dev pstoedit portaudio19-dev libqhull-dev libqrupdate-dev libsuitesparse-dev texlive-latex-extra libxft-dev zlib1g-dev autoconf automake bison flex gperf gzip icoutils librsvg2-bin libtool perl rsync tar qtbase5-dev qttools5-dev qttools5-dev-tools libqscintilla2-qt5-dev libsundials-dev
 
-      # https://www.gnu.org/software/octave/
-      - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
-        run: |
-          curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
-          tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
+  #     # https://www.gnu.org/software/octave/
+  #     - name: Grab Octave Source v${{ env.OCTAVE_VERSION }}
+  #       run: |
+  #         curl -o octave-$OCTAVE_VERSION.tar.xz https://ftp.gnu.org/gnu/octave/octave-$OCTAVE_VERSION.tar.xz
+  #         tar -xJf octave-$OCTAVE_VERSION.tar.xz --directory $GITHUB_WORKSPACE
 
-      - name: Configure Octave ${{ env.OCTAVE_VERSION }}
-        run: |
-          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          ./configure --prefix=$GITHUB_WORKSPACE/usr
+  #     - name: Configure Octave ${{ env.OCTAVE_VERSION }}
+  #       run: |
+  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+  #         ./configure --prefix=$GITHUB_WORKSPACE/usr
 
-      - name: Build Octave
-        run: |
-          cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
-          make -j2 || echo "::warning title=BuildFailure::Build Failed"
+  #     - name: Build Octave
+  #       run: |
+  #         cd $GITHUB_WORKSPACE/octave-$OCTAVE_VERSION
+  #         make -j2 || echo "::warning title=BuildFailure::Build Failed"
