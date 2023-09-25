@@ -17,7 +17,7 @@ jobs:
       matrix:
         os: ['macos-11', 'macos-12', 'ubuntu-22.04']
     runs-on: ${{ matrix.os }}
-    name: Build on ${{ runner.os }}
+    name: Build on ${RUNNER_OS}
     steps:
       # https://github.com/actions/checkout
       - name: Checkout the commit triggering this job
@@ -101,12 +101,12 @@ jobs:
             /usr/local/include
             # These caches are quite large - omitting
             # ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-cachev3-${{ hashFiles('Brewfile') }}
+          key: ${RUNNER_OS}-cachev3-${{ hashFiles('Brewfile') }}
           # # Require a specific match in order to use the cache
           # # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
           # restore-keys: |
-          #   ${{ runner.os }}-cachev3-
-          #   ${{ runner.os }}-cachev3-${{ hashFiles('Brewfile') }}
+          #   ${RUNNER_OS}-cachev3-
+          #   ${RUNNER_OS}-cachev3-${{ hashFiles('Brewfile') }}
 
       - name: Cache Octave Download
         id: cache-octave-download
